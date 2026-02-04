@@ -61,7 +61,6 @@
 			{
 				"name": "If_HasRowsToCopy",
 				"type": "IfCondition",
-				"state": "Inactive",
 				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
@@ -208,7 +207,6 @@
 			{
 				"name": "Step4_UpdateClientContactStatus",
 				"type": "SqlServerStoredProcedure",
-				"state": "Inactive",
 				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
