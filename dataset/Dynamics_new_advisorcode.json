@@ -1,0 +1,19 @@
+{
+	"name": "Dynamics_new_advisorcode",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DynamicsProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/3_CommissionSetup_To_CRM"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "new_advisorcode"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

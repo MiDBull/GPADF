@@ -1,0 +1,986 @@
+{
+	"name": "1_Plan_Old",
+	"properties": {
+		"description": "Incremental sync of Plans to CRM new_plan entity with upsert",
+		"activities": [
+			{
+				"name": "RunPlanPipeline",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_RunPlanPipeline"
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "GetDistinctClientCodes",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "RunPlanPipeline",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": "SELECT STUFF((SELECT ',' + CAST(ClientCode AS NVARCHAR(100)) FROM (SELECT DISTINCT ClientCode FROM staging.Plans_Staging WHERE SyncStatus = 'Processing') sub FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'') AS ClientCodes",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_PlanStaging",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ClientGUID_Lookup",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "GetDistinctClientCodes",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DynamicsSource",
+						"query": {
+							"value": "@if(empty(activity('GetDistinctClientCodes').output.firstRow.ClientCodes), '<fetch><entity name=\"contact\"><attribute name=\"contactid\"/><attribute name=\"new_clientid\"/><filter><condition attribute=\"new_clientid\" operator=\"eq\" value=\"00000000\"/></filter></entity></fetch>', concat('<fetch><entity name=\"contact\"><attribute name=\"contactid\"/><attribute name=\"new_clientid\"/><filter type=\"and\"><condition attribute=\"new_clientid\" operator=\"in\">', concat('<value>', replace(activity('GetDistinctClientCodes').output.firstRow.ClientCodes, ',', '</value><value>'), '</value>'), '</condition></filter></entity></fetch>'))",
+							"type": "Expression"
+						}
+					},
+					"dataset": {
+						"referenceName": "Dynamics_contact",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "InsertClientContactGUIDs",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ClientGUID_Lookup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_InsertClientContactGUIDs",
+					"storedProcedureParameters": {
+						"Json": {
+							"value": {
+								"value": "@string(activity('ClientGUID_Lookup').output.value)",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Check_HasProcessingRows",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "InsertClientContactGUIDs",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": "SELECT COUNT(1) AS RecordCount FROM staging.Plans_Staging WHERE SyncStatus = 'Processing'",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_PlanStaging",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "If_HasRowsToCopy",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check_HasProcessingRows",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(int(activity('Check_HasProcessingRows').output.firstRow.RecordCount), 0)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Copy_ToCRM",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderStoredProcedureName": "staging.usp_SelectPlanUpsertDataset",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DynamicsSink",
+									"writeBatchSize": 1,
+									"writeBehavior": "upsert",
+									"ignoreNullValues": true,
+									"alternateKeyName": "cr9c3_new_planid1"
+								},
+								"enableStaging": false,
+								"enableSkipIncompatibleRow": true,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Warning",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "PipelineLogs",
+											"type": "LinkedServiceReference"
+										},
+										"path": "copyactivity-logs"
+									}
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "new_account",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_account",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_addressspouse",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_addressspouse",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_advisorid"
+											},
+											"sink": {
+												"name": "new_advisorid"
+											}
+										},
+										{
+											"source": {
+												"name": "new_advisorid@Microsoft.Dynamics.CRM.lookuplogicalname"
+											},
+											"sink": {
+												"name": "new_advisorid@Microsoft.Dynamics.CRM.lookuplogicalname"
+											}
+										},
+										{
+											"source": {
+												"name": "new_arethereanyotherindividualsentities",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_arethereanyotherindividualsentities",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_areyouactingontheinstructionsofanother",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_areyouactingontheinstructionsofanother",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_bankname",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_bankname",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_beneficiary",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_beneficiary",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_branch",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_branch",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_city",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_city",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_cityspouse",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_cityspouse",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_clientid"
+											},
+											"sink": {
+												"name": "new_clientid"
+											}
+										},
+										{
+											"source": {
+												"name": "new_clientid@Microsoft.Dynamics.CRM.lookuplogicalname"
+											},
+											"sink": {
+												"name": "new_clientid@Microsoft.Dynamics.CRM.lookuplogicalname"
+											}
+										},
+										{
+											"source": {
+												"name": "new_clientslist",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_clientslist",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_country",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_country",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_countryspouse",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_countryspouse",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_dateofbirthspouse",
+												"type": "DateTime"
+											},
+											"sink": {
+												"name": "new_dateofbirthspouse",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"name": "new_description",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_description",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_enddate",
+												"type": "DateTime"
+											},
+											"sink": {
+												"name": "new_enddate",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"name": "new_freezeplan",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_freezeplan",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_groupaccount",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_groupaccount",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_growth",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_growth",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_high",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_high",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_high1",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_high1",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_holdername",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_holdername",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_income",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_income",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_individualspousalrrsp",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_individualspousalrrsp",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_intendedusefortheplan",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_intendedusefortheplan",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_intermediaryaccount",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_intermediaryaccount",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_itf",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_itf",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_kyconfiledate",
+												"type": "DateTime"
+											},
+											"sink": {
+												"name": "new_kyconfiledate",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"name": "new_kycreviewdate",
+												"type": "DateTime"
+											},
+											"sink": {
+												"name": "new_kycreviewdate",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"name": "new_leveragedaccount",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_leveragedaccount",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_limitedtradingauthorisation",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_limitedtradingauthorisation",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_lockedin",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_lockedin",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_low",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_low",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_low1",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_low1",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_lowtomedium",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_lowtomedium",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_lowtomedium1",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_lowtomedium1",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_ltadate",
+												"type": "DateTime"
+											},
+											"sink": {
+												"name": "new_ltadate",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"name": "new_medium",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_medium",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_medium1",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_medium1",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_mediumtohigh",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_mediumtohigh",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_mediumtohigh1",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_mediumtohigh1",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_name",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_name",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_newintermediarycode",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_newintermediarycode",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_plancode_sqlplanid",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_plancode_sqlplanid",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_planid1",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_planid1",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_plankyctimehorizon",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_plankyctimehorizon",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_planstatus",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_planstatus",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_plantype",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_plantype",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_postalcode",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_postalcode",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_postalcodespouse",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_postalcodespouse",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_powerofattorney",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_powerofattorney",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_province",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_province",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_province1",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_province1",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_provincespouse",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_provincespouse",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_registerin",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_registerin",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_requiredsignature",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_requiredsignature",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_safety",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_safety",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_sex",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_sex",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_sinspouse",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_sinspouse",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_speculation",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_speculation",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_spousename",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_spousename",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_spouseslastname",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_spouseslastname",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_startdate",
+												"type": "DateTime"
+											},
+											"sink": {
+												"name": "new_startdate",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"name": "new_street",
+												"type": "String"
+											},
+											"sink": {
+												"name": "new_street",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"name": "new_tfsasuccessor",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_tfsasuccessor",
+												"type": "Boolean"
+											}
+										},
+										{
+											"source": {
+												"name": "new_title",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_title",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_type",
+												"type": "Int32"
+											},
+											"sink": {
+												"name": "new_type",
+												"type": "Int32"
+											}
+										},
+										{
+											"source": {
+												"name": "new_verylow",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_verylow",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "new_verylow1",
+												"type": "Decimal"
+											},
+											"sink": {
+												"name": "new_verylow1",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"name": "ownerid",
+												"type": "String"
+											},
+											"sink": {
+												"name": "ownerid",
+												"type": "Guid"
+											}
+										},
+										{
+											"source": {
+												"name": "ownerid@Microsoft.Dynamics.CRM.associatednavigationproperty",
+												"type": "String"
+											},
+											"sink": {
+												"name": "ownerid@Microsoft.Dynamics.CRM.associatednavigationproperty"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_PlanStaging",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "CRM_Plans",
+									"type": "DatasetReference"
+								}
+							],
+							"linkedServiceName": {
+								"referenceName": "DataMigrationProd",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "1_Plans"
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-01-17T12:56:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

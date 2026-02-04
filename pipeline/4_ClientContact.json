@@ -1,0 +1,261 @@
+{
+	"name": "4_ClientContact",
+	"properties": {
+		"description": "Runs full ClientContact sync with CRM upsert using direct SQL source and CRM GUID lookup",
+		"activities": [
+			{
+				"name": "RunClientContactPipeline",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[staging].[usp_RunClientContactPipeline_v2]"
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Check_HasProcessingRows",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "RunClientContactPipeline",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": "SELECT COUNT(1) AS RecordCount FROM staging.ClientContact_Staging WHERE SyncStatus = 'Processing'",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_ClientContact_Batch",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "If_HasRowsToCopy",
+				"type": "IfCondition",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Check_HasProcessingRows",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(int(activity('Check_HasProcessingRows').output.firstRow.RecordCount), 0)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Copy_ToCRM",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": "SELECT LTRIM(RTRIM([Client ID])) AS new_clientid, LTRIM(RTRIM([Client First Name])) AS firstname, LTRIM(RTRIM([Client Last Name])) AS lastname, LTRIM(RTRIM([Client E-mail])) AS emailaddress1, LTRIM(RTRIM([Client Home Phone])) AS telephone1, LTRIM(RTRIM([Client Business Phone])) AS telephone2, REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM([Client Cell Phone])), CHAR(0), ''), CHAR(1), ''), CHAR(2), ''), CHAR(3), ''), CHAR(4), '') AS mobilephone, LTRIM(RTRIM([Client Fax])) AS fax, LTRIM(RTRIM([Client Address])) AS address1_line1, LTRIM(RTRIM([Client City])) AS address1_city, LTRIM(RTRIM([Client Province])) AS address1_stateorprovince, LTRIM(RTRIM([Client Postal Code])) AS address1_postalcode, LTRIM(RTRIM([Client Country])) AS address1_country, CAST([Client Type] AS INT) AS new_clienttype, SYSDATETIME() AS new_datasynctimestamp, CASE WHEN TRY_CAST([Net Worth (a+b+c)] AS MONEY) < 0 THEN NULL ELSE TRY_CAST([Net Worth (a+b+c)] AS MONEY) END AS new_networth, CAST([Investment Knowledge] AS INT) AS new_investmentknowledge_optionset, LTRIM(RTRIM([Employer Name])) AS new_employername, AdvisorClientCRMGUID AS parentcustomerid, 'account' AS [parentcustomerid@EntityReference], OwnerClientCRMGUID AS ownerid, 'systemuser' AS [ownerid@EntityReference] FROM staging.ClientContact_Staging WHERE SyncStatus = 'Processing'",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DynamicsSink",
+									"writeBatchSize": 1,
+									"writeBehavior": "upsert",
+									"ignoreNullValues": true,
+									"alternateKeyName": "cr9c3_clientid"
+								},
+								"enableStaging": false,
+								"enableSkipIncompatibleRow": true
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_ClientContact_Batch",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Dynamics_contact",
+									"type": "DatasetReference"
+								}
+							],
+							"linkedServiceName": {
+								"referenceName": "DataMigration",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Build_FetchXML",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "Copy_ToCRM",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": "EXEC [staging].[usp_BuildClientFetchXML]",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "SQL_ClientContact_Batch",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": true
+							},
+							"linkedServiceName": {
+								"referenceName": "DataMigration",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Fetch_ClientGUIDsFromCRM",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Build_FetchXML",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DynamicsSource",
+									"query": {
+										"value": "@activity('Build_FetchXML').output.firstRow.FetchXML",
+										"type": "Expression"
+									}
+								},
+								"sink": {
+									"type": "SqlSink",
+									"preCopyScript": "TRUNCATE TABLE staging.CRM_ClientMap"
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "Dynamics_contact",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SQL_ClientMap",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Step4_UpdateClientContactStatus",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "If_HasRowsToCopy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[staging].[usp_UpdateClientContactStatus_v2]",
+					"storedProcedureParameters": {
+						"Status": {
+							"value": {
+								"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), 'Completed', 'Failed')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), '', activity('If_HasRowsToCopy').error.message)",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "0_Winfund Client info to CRM"
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-02-04T18:10:20Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

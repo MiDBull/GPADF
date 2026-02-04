@@ -1,0 +1,30 @@
+{
+	"name": "CRM_ClientMap",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "1_Plans"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "ClientCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "contactid",
+				"type": "uniqueidentifier"
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "CRM_ClientMap"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

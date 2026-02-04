@@ -1,0 +1,290 @@
+{
+	"name": "3_ComissionSetup",
+	"properties": {
+		"activities": [
+			{
+				"name": "StoredProcedure_RefreshData",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_RefreshCommissionSetupData"
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Lookup_GetBatchToProcess",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "StoredProcedure_RefreshData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": "EXEC [staging].[usp_ProcessCommissionSetupToCRM] @BatchSize = 1000",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_CommissionSetup_Batch",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Set_RecordCount",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Lookup_GetBatchToProcess",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "RecordCount",
+					"value": {
+						"value": "@if(greater(activity('Lookup_GetBatchToProcess').output.count, 0), 1, 0)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set_CurrentBatchId",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set_RecordCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "CurrentBatchId",
+					"value": {
+						"value": "@if(greater(activity('Lookup_GetBatchToProcess').output.count, 0), string(activity('Lookup_GetBatchToProcess').output.value[0].BatchId), '0')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Lookup_ServicesAccount",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Set_CurrentBatchId",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "01:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DynamicsSource",
+						"query": {
+							"value": "@if(greater(variables('RecordCount'), 0), '<fetch top=\"1\"><entity name=\"systemuser\"><attribute name=\"systemuserid\" /><filter><condition attribute=\"fullname\" operator=\"eq\" value=\"Services Account\" /><condition attribute=\"isdisabled\" operator=\"eq\" value=\"0\" /></filter></entity></fetch>', '')",
+							"type": "Expression"
+						}
+					},
+					"dataset": {
+						"referenceName": "Dynamics_new_advisorcode",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "Set_ServicesUserId",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Lookup_ServicesAccount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ServicesUserId",
+					"value": {
+						"value": "@if(greater(variables('RecordCount'), 0), activity('Lookup_ServicesAccount').output.firstRow.systemuserid, '')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach_ProcessRecords",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Set_ServicesUserId",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@if(greater(activity('Lookup_GetBatchToProcess').output.count, 0), activity('Lookup_GetBatchToProcess').output.value, json('[]'))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_ToCRM",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "00:10:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT LTRIM(RTRIM([Name])) as new_name, LTRIM(RTRIM([WorkGroup Code])) AS new_workgroupcode, LTRIM(RTRIM([Rep Code])) AS new_repcode, TRY_CAST(NULLIF([Dealer Code], '') AS INT) AS new_dealercode_advisorcode, CASE WHEN [Rep Status] = 'Active' THEN 1 ELSE 2 END AS new_repstatus, CASE WHEN BranchManagerOverrideType = 1 THEN 1 ELSE 0 END AS new_branchmanageroverride_advisorcode, CASE WHEN DealerOverrideType = 1 THEN 1 ELSE 0 END AS new_dealeroverridetype, TRY_CAST(LTRIM(RTRIM([Branch Manager Override %])) AS DECIMAL(18,2)) AS new_branchmanageroverride, TRY_CAST(LTRIM(RTRIM([Dealer Override %])) AS DECIMAL(18,2)) AS new_dealeroverride, LTRIM(RTRIM([Manager Code])) AS new_managercode, TRY_CAST(LTRIM(RTRIM(Commission)) AS DECIMAL(18,2)) as new_commission_advisorcode, TRY_CAST(NULLIF([Rep Type], '') AS INT) AS new_reptype_advisorcode FROM [DataMigration].[staging].[CommissionSetup_Staging] WHERE StagingId = @{item().StagingId}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DynamicsSink",
+									"writeBatchSize": 1,
+									"writeBehavior": "upsert",
+									"ignoreNullValues": true,
+									"alternateKeyName": "cr9c3_new_name"
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_CommissionSetup_Batch",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Dynamics_new_advisorcode",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "StoredProcedure_UpdateStatus",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach_ProcessRecords",
+						"dependencyConditions": [
+							"Succeeded",
+							"Failed",
+							"Skipped"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_UpdateCommissionSetupStatusBatch",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": {
+								"value": "@if(greater(int(variables('CurrentBatchId')), 0), int(variables('CurrentBatchId')), json('null'))",
+								"type": "Expression"
+							},
+							"type": "Int32"
+						},
+						"Status": {
+							"value": {
+								"value": "@if(equals(activity('ForEach_ProcessRecords').status, 'Succeeded'), 'Processed', 'Failed')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@if(equals(activity('ForEach_ProcessRecords').status, 'Succeeded'), '', activity('ForEach_ProcessRecords').error.message)",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"variables": {
+			"RecordCount": {
+				"type": "Integer",
+				"defaultValue": 0
+			},
+			"CurrentBatchId": {
+				"type": "String",
+				"defaultValue": "0"
+			},
+			"ServicesUserId": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-06-30T00:09:40Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

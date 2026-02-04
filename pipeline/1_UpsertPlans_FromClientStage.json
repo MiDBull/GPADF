@@ -1,0 +1,114 @@
+{
+	"name": "1_UpsertPlans_FromClientStage",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get_PlanCodeCount",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": "SELECT COUNT(DISTINCT LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))) AS Cnt FROM staging.ClientPlan_Staging WHERE SyncStatus='Processing' AND PlanCode IS NOT NULL AND LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))<>'';",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_ClientPlan",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "HasPlanCodes",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get_PlanCodeCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(int(activity('Get_PlanCodeCount').output.firstRow.Cnt), 0)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Upsert_Plans_ByCode",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": "SELECT DISTINCT LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50)))) AS new_plancode_sqlplanid, CONCAT('Plan ', LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))) AS new_name FROM staging.ClientPlan_Staging WHERE SyncStatus='Processing' AND PlanCode IS NOT NULL AND LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))<>'';",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DynamicsSink",
+									"writeBatchSize": 10,
+									"writeBehavior": "upsert",
+									"alternateKeyName": "cr9c3_plancode"
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "new_plancode_sqlplanid"
+											},
+											"sink": {
+												"name": "new_plancode_sqlplanid"
+											}
+										},
+										{
+											"source": {
+												"path": "new_name"
+											},
+											"sink": {
+												"name": "new_name"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_ClientPlan",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "CRM_Plans",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2025-08-14T15:08:08Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

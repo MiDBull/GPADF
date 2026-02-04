@@ -1,0 +1,62 @@
+{
+	"name": "SQL_ClientPlan",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "1_Plans"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "PlanCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ClientCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Plan_GUID",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "Client_GUID",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "SyncStatus",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RetryCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LastSyncAttempt",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "ErrorMessage",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastModifiedDate",
+				"type": "datetime2",
+				"scale": 7
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "ClientPlan_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

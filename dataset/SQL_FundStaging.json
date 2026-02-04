@@ -1,0 +1,179 @@
+{
+	"name": "SQL_FundStaging",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "3_Funds"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "Fund Code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Series",
+				"type": "nvarchar"
+			},
+			{
+				"name": "FundLinkId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Fund Company",
+				"type": "nvarchar"
+			},
+			{
+				"name": "new_fundcompanyid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "Name",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Descriptive Name",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Short Name",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Investment Objective",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ISIN",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Cusip",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Category",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Category2",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Fund Type Code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Product Type",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Fund Status",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Registered",
+				"type": "bit"
+			},
+			{
+				"name": "Group",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Rate Type",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Price",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "Minimum Initial Investment",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "Safety Per",
+				"type": "decimal",
+				"precision": 9,
+				"scale": 4
+			},
+			{
+				"name": "Income Per",
+				"type": "decimal",
+				"precision": 9,
+				"scale": 4
+			},
+			{
+				"name": "Growth Per",
+				"type": "decimal",
+				"precision": 9,
+				"scale": 4
+			},
+			{
+				"name": "Speculation Per",
+				"type": "decimal",
+				"precision": 9,
+				"scale": 4
+			},
+			{
+				"name": "Date",
+				"type": "date"
+			},
+			{
+				"name": "Mature Date",
+				"type": "date"
+			},
+			{
+				"name": "Last_Modified_Date",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "DateNow",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "CreatedDate",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "LastModifiedDate",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "SyncStatus",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RetryCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LastSyncAttempt",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "ErrorMessage",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "Fund_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

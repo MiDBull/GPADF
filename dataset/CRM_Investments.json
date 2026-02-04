@@ -1,0 +1,19 @@
+{
+	"name": "CRM_Investments",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DynamicsProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "2_Investments"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "new_investment"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

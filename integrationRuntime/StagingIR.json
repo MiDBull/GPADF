@@ -1,0 +1,6 @@
+{
+	"name": "StagingIR",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}

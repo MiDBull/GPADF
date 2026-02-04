@@ -1,0 +1,6 @@
+{
+	"name": "ProdIR",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}

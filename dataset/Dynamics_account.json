@@ -1,0 +1,16 @@
+{
+	"name": "Dynamics_account",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DynamicsProd",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "account"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

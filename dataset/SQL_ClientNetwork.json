@@ -1,0 +1,157 @@
+{
+	"name": "SQL_ClientNetwork",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigration",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/6_ClientFamilyNetwork"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "ClientNetworkPKCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Relationship",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "NetworkName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ClientID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ClientFirstName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ClientLastName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryTitle",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SecondaryFirstName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryLastName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryDateOfBirth",
+				"type": "date"
+			},
+			{
+				"name": "SecondarySINNumber",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryGender",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SecondaryMaritalStatus",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SecondaryBusinessPhone",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryCellPhone",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryHomePhone",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryEmailAddress",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryBusinessPhoneExt",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SameAddress",
+				"type": "bit"
+			},
+			{
+				"name": "SecondaryAddress",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryCity",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryProvince",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryCountry",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SecondaryPostalCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Owner",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ExtractedDateTime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "LastModifiedDate_Person",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "LastModifiedDate_Address",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "SyncStatus",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastSyncAttempt",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "ErrorMessage",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "ClientFamilyNetwork_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

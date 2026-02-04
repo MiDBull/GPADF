@@ -1,0 +1,20 @@
+{
+	"name": "SQL_Advisors",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "WinfundProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/2_Advisors_To_CRM"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Scribe_Advisors"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,21 @@
+{
+	"name": "SqlServer1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "10.8.0.6",
+			"database": "winfundsql",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "gpwealth",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJiZmU5ZWU0MC04Mjk2LTQ3YzItODIwMi1mNmE2ZjMxM2FhYzIiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "StagingIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

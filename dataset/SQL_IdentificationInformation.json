@@ -1,0 +1,88 @@
+{
+	"name": "SQL_IdentificationInformation",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigration",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/5_IdentificationInformation_To_CRM"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Owner",
+				"type": "varchar"
+			},
+			{
+				"name": "IDType",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Description",
+				"type": "varchar"
+			},
+			{
+				"name": "Identification#",
+				"type": "varchar"
+			},
+			{
+				"name": "IssuePlace",
+				"type": "varchar"
+			},
+			{
+				"name": "Province",
+				"type": "varchar"
+			},
+			{
+				"name": "Country",
+				"type": "varchar"
+			},
+			{
+				"name": "Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "ClientID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "IdentificationPKCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "DateNow",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Last_Modified_Date_ID",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Last_Modified_Date_Client",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "IdentificationInformation_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

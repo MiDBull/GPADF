@@ -1,0 +1,16 @@
+{
+	"name": "SQL_AdvisorStaging",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigration",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/2_Advisors_To_CRM"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

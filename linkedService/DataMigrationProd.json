@@ -1,0 +1,21 @@
+{
+	"name": "DataMigrationProd",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "VieFund",
+			"database": "DataMigration",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "via",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJkMDE4NTZjNC1lYTYzLTRjODgtODIzNy0yNmVlOWFmNzgyMTkiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "ProdIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

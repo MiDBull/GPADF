@@ -1,0 +1,30 @@
+{
+	"name": "SQL_ClientMap",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigration",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/4_ClientContact_To_CRM"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "ClientCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "contactid",
+				"type": "uniqueidentifier"
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "CRM_ClientMap"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

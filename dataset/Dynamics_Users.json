@@ -1,0 +1,16 @@
+{
+	"name": "Dynamics_Users",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DynamicsProd",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "systemuser"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

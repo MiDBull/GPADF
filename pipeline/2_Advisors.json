@@ -1,0 +1,204 @@
+{
+	"name": "2_Advisors",
+	"properties": {
+		"description": "Sync Advisors to CRM account entity using staging pipeline and upsert",
+		"activities": [
+			{
+				"name": "RunAdvisorPipeline",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[staging].[usp_RunAdvisorPipeline]",
+					"storedProcedureParameters": {
+						"ForceUpdate": {
+							"value": {
+								"value": "@pipeline().parameters.ForceUpdate",
+								"type": "Expression"
+							},
+							"type": "Int"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Check_HasProcessingRows",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "RunAdvisorPipeline",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": "SELECT COUNT(1) AS RecordCount FROM staging.Advisor_Staging WHERE SyncStatus = 'Processing'",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_AdvisorStaging",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "If_HasRowsToCopy",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check_HasProcessingRows",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(int(activity('Check_HasProcessingRows').output.firstRow.RecordCount), 0)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Copy_ToCRM",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": "SELECT [Advisor Code] AS new_advisorcode_advisor, LTRIM(RTRIM([First Name])) AS new_firstname_advisor, LTRIM(RTRIM([Last Name])) AS new_lastname_advisor, LTRIM(RTRIM([Account Name])) AS name, LTRIM(RTRIM([Business Name])) AS new_businessname_advisor, LTRIM(RTRIM([Account/Phone])) AS new_accountphone, LTRIM(RTRIM([E-mail])) AS emailaddress1, LTRIM(RTRIM([Federal BN])) AS new_federalbn, LTRIM(RTRIM([Provincial BN])) AS new_provincialbn, LTRIM(RTRIM([NRD_Number])) AS new_nrd_number, [Last_Modified_Date] AS new_datasynctimestamp, LTRIM(RTRIM([Address 1: City])) AS address1_city, LTRIM(RTRIM([Address 1: State/Province])) AS address1_stateorprovince, LTRIM(RTRIM([Address 1: ZIP/Postal Code])) AS address1_postalcode, LTRIM(RTRIM([Address 1: Country/Region])) AS address1_country, LTRIM(RTRIM([Address 1: Street 1])) AS address1_line1, LTRIM(RTRIM([Address 1: Telephone 2])) AS address1_telephone2, LTRIM(RTRIM([Address 1: Fax])) AS address1_fax, LTRIM(RTRIM([Web Site])) AS websiteurl, LTRIM(RTRIM([Ext])) AS new_ext, LTRIM(RTRIM([License #])) AS new_license_advisorlicense, [License Start Date] AS new_licensestartdate_advisorlicense, [License End Date] AS new_licenseenddate_advisorlicense, CAST([License Level] AS INT) AS new_licenselevel_advisorlicense, CAST([License Type] AS INT) AS new_licensetype_advisorlicense, LTRIM(RTRIM([Company_E & O])) AS new_company_errorsandommission, LTRIM(RTRIM([Policy #_E & O])) AS new_policyerrorsandommission, LTRIM(RTRIM([Coverage $_E & O])) AS new_coverage_errorsandommission, CAST([Coverage For_E & O] AS INT) AS new_coveragefor_errorsandommission, LTRIM(RTRIM([Sponsor])) AS new_sponsor_advisorlicenses, LTRIM(RTRIM([Premium $_E & O])) AS new_premium_errorsandommission, CAST([Premium Mode_E & O] AS INT) AS new_premiummode_errorsandommission, LTRIM(RTRIM([Deductible $_E & O])) AS new_deductible_errorsandommission, [Starting Date_E & O] AS new_startingdate_errorsandommission, [Ending Date_E & O] AS new_endingdate_errorsandommission, CAST([Alberta] AS BIT) AS new_alberta_advisor_license, CAST([British Columbia] AS BIT) AS new_britishcolumbia_advisor_license, CAST([Manitoba] AS BIT) AS new_manitoba_advisor_license, CAST([New Brunswick] AS BIT) AS new_newbrunswick_advisor_license, CAST([Newfoundland and Labrador] AS BIT) AS new_newfoundlandandlabrador_advisor_license, CAST([Northwest Territories] AS BIT) AS new_northwestterritories_advisor_license, CAST([Nova Scotia] AS BIT) AS new_novascotia_advisor_license, CAST([Ontario] AS BIT) AS new_ontario_advisor_license, CAST([Prince Edward Island] AS BIT) AS new_princeedwardisland_advisor_license, CAST([Quebec] AS BIT) AS new_quebec_advisor_license, AdvisorCRMGUID, OwnerCRMGUID, CONCAT('/systemusers(', OwnerCRMGUID, ')') AS ownerbind FROM staging.Advisor_Staging WHERE SyncStatus = 'Processing'",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DynamicsSink",
+									"writeBatchSize": 1,
+									"writeBehavior": "upsert",
+									"ignoreNullValues": true,
+									"alternateKeyName": "cr9c3_advisor_code",
+									"additionalColumns": {
+										"ownerid@odata.bind": {
+											"type": "Expression",
+											"value": "ownerbind"
+										}
+									}
+								},
+								"enableStaging": false,
+								"enableSkipIncompatibleRow": true,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Warning",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "PipelineLogs",
+											"type": "LinkedServiceReference"
+										},
+										"path": "copyactivity-logs"
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_AdvisorStaging",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Dynamics_account",
+									"type": "DatasetReference"
+								}
+							],
+							"linkedServiceName": {
+								"referenceName": "DataMigrationProd",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Step4_UpdateAdvisorStatus",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "If_HasRowsToCopy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_UpdateAdvisorStatus",
+					"storedProcedureParameters": {
+						"Status": {
+							"value": {
+								"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), 'Completed', 'Failed')",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), '', activity('If_HasRowsToCopy').error.message)",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"ForceUpdate": {
+				"type": "Int",
+				"defaultValue": 0
+			}
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM"
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-01-28T19:44:55Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

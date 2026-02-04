@@ -1,0 +1,21 @@
+{
+	"name": "DataMigration",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "10.8.0.6",
+			"database": "DataMigration",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "ScribeOnline",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJkOWNkMzc0NS1jOTFjLTQ3N2YtOGM0OC04YjBlZDJiYzcyMTUiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "StagingIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

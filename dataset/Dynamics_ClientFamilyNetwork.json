@@ -1,0 +1,19 @@
+{
+	"name": "Dynamics_ClientFamilyNetwork",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Dynamics365v2",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/6_ClientFamilyNetwork"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "new_clientnetwork"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

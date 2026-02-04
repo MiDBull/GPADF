@@ -1,0 +1,93 @@
+{
+	"name": "1_Plans",
+	"properties": {
+		"description": "Insert new_plan record(s) from Plans_Staging into CRM (with contact GUID join)",
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "RunPlanPipeline",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderStoredProcedureName": "[staging].[usp_SelectPlanUpsertDataset]",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DynamicsSink",
+						"writeBatchSize": 10,
+						"writeBehavior": "upsert",
+						"ignoreNullValues": false,
+						"alternateKeyName": "cr9c3_new_planid1",
+						"bypassPowerAutomateFlows": false,
+						"useAlternateKey": true
+					},
+					"enableStaging": false,
+					"logSettings": {
+						"enableCopyActivityLog": true,
+						"copyActivityLogSettings": {
+							"logLevel": "Info",
+							"enableReliableLogging": false
+						},
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "PipelineLogs",
+								"type": "LinkedServiceReference"
+							},
+							"path": "copyactivity-logs"
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_PlanStaging",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "CRM_Plans",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "RunPlanPipeline",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_RunPlanPipeline"
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-01-17T12:56:56Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

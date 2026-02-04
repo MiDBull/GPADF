@@ -1,0 +1,89 @@
+{
+	"name": "SQL_Clients",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigration",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/4_ClientContact_To_CRM"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Fund Company Code",
+				"type": "varchar"
+			},
+			{
+				"name": "Address",
+				"type": "varchar"
+			},
+			{
+				"name": "Province",
+				"type": "char"
+			},
+			{
+				"name": "Phone",
+				"type": "char"
+			},
+			{
+				"name": "Approved",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "NM Participant",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Status",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "City",
+				"type": "varchar"
+			},
+			{
+				"name": "Postal Code",
+				"type": "char"
+			},
+			{
+				"name": "Fax",
+				"type": "char"
+			},
+			{
+				"name": "FundSERV Files",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Owner",
+				"type": "varchar"
+			},
+			{
+				"name": "DateNow",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Last_Modified_Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "ClientContact_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,269 @@
+{
+	"name": "6_ClientFamilyNetwork key in crm issues",
+	"properties": {
+		"description": "Refresh ClientFamilyNetwork staging, resolve lookups, upsert into CRM, update status",
+		"activities": [
+			{
+				"name": "StoredProcedure_RefreshData",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_RefreshClientFamilyNetworkData"
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Lookup_GetBatchToProcess",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "StoredProcedure_RefreshData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": "EXEC staging.usp_ProcessClientFamilyNetworkToCRM @BatchSize = 10",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_ClientNetwork",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Lookup_ServicesAccount",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Lookup_GetBatchToProcess",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DynamicsSource",
+						"query": "<fetch top=\"1\"><entity name=\"systemuser\"><attribute name=\"systemuserid\" /><filter><condition attribute=\"fullname\" operator=\"eq\" value=\"Services Account\" /><condition attribute=\"isdisabled\" operator=\"eq\" value=\"0\" /></filter></entity></fetch>"
+					},
+					"dataset": {
+						"referenceName": "Dynamics_Users",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "Set_ServicesUserId",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Lookup_ServicesAccount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ServicesUserId",
+					"value": {
+						"value": "@activity('Lookup_ServicesAccount').output.firstRow.systemuserid",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach_ProcessRecords",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Set_ServicesUserId",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_GetBatchToProcess').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Lookup_ClientContact",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DynamicsSource",
+									"query": {
+										"value": "@concat('<fetch top=\"1\"><entity name=\"contact\"><attribute name=\"contactid\"/><filter><condition attribute=\"new_clientid\" operator=\"eq\" value=\"', item().ClientID, '\"/></filter></entity></fetch>')",
+										"type": "Expression"
+									}
+								},
+								"dataset": {
+									"referenceName": "Dynamics_contact",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": true
+							}
+						},
+						{
+							"name": "Copy_ToCRM",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Lookup_ClientContact",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT * FROM staging.ClientFamilyNetwork_Staging WHERE ClientNetworkPKCode = @{item().ClientNetworkPKCode}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DynamicsSink",
+									"writeBatchSize": 1,
+									"writeBehavior": "upsert",
+									"ignoreNullValues": true,
+									"alternateKeyName": "cr9c3_clientnetworkpkcode",
+									"additionalColumns": {
+										"ownerid@odata.bind": {
+											"type": "Expression",
+											"value": "@concat('/systemusers(', variables('ServicesUserId'), ')')"
+										},
+										"new_client@odata.bind": {
+											"type": "Expression",
+											"value": "@if(contains(activity('Lookup_ClientContact').output, 'firstRow'), concat('/contacts(', activity('Lookup_ClientContact').output.firstRow.contactid, ')'), '')"
+										},
+										"new_networkclientid@odata.bind": {
+											"type": "Expression",
+											"value": "@if(contains(activity('Lookup_ClientContact').output, 'firstRow'), concat('/contacts(', activity('Lookup_ClientContact').output.firstRow.contactid, ')'), '')"
+										}
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_ClientNetwork",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Dynamics_ClientFamilyNetwork",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "StoredProcedure_UpdateStatus",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach_ProcessRecords",
+						"dependencyConditions": [
+							"Succeeded",
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_UpdateClientFamilyNetworkStatusBatch",
+					"storedProcedureParameters": {
+						"Status": {
+							"value": {
+								"value": "@if(equals(activity('ForEach_ProcessRecords').status, 'Succeeded'), 'Completed', 'Failed')",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"variables": {
+			"ServicesUserId": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-06-29T14:32:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

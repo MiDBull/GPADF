@@ -1,0 +1,19 @@
+{
+	"name": "CRM_ProductList",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DynamicsProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "3_Funds"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "new_fund"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

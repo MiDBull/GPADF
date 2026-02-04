@@ -1,0 +1,9 @@
+{
+	"name": "GPDFactory",
+	"location": "canadacentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f1b05e0a-05fd-4883-85f1-4d777323edd3",
+		"tenantId": "8891a882-9b40-4771-8bb0-ead55fac29f5"
+	}
+}

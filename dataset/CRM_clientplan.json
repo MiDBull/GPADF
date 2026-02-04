@@ -1,0 +1,19 @@
+{
+	"name": "CRM_clientplan",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DynamicsProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "1_Plans"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "new_clientplan"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

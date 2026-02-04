@@ -1,0 +1,20 @@
+{
+	"name": "SQL_FundCompany",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/1_FundCompany_To_CRM"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "FundCompany_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

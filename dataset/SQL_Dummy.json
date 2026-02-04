@@ -1,0 +1,23 @@
+{
+	"name": "SQL_Dummy",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "Dummy",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "Dummy"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

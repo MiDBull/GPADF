@@ -1,0 +1,19 @@
+{
+	"name": "Dynamics_identificationinformation",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Dynamics365v2",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/5_IdentificationInformation_To_CRM"
+		},
+		"annotations": [],
+		"type": "DynamicsEntity",
+		"schema": [],
+		"typeProperties": {
+			"entityName": "new_identificationinformation"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,20 @@
+{
+	"name": "SQL_CommissionSetup",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "WinfundProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM/3_CommissionSetup_To_CRM"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Scribe_CommissionSetup"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,52 @@
+{
+	"name": "2_Investments",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy_ToCRM",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderStoredProcedureName": "[staging].[usp_SelectInvestmentUpsertDataset]",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DynamicsSink",
+						"writeBatchSize": 10,
+						"writeBehavior": "upsert",
+						"ignoreNullValues": true,
+						"alternateKeyName": "cr9c3_investmentpkcodestring"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_Investments",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "CRM_Investments",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "2_Investments"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-08-28T02:16:28Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

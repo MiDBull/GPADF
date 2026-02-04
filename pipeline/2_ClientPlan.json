@@ -1,0 +1,161 @@
+{
+	"name": "2_ClientPlan",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get_PlanCodes",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": "SELECT DISTINCT LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50)))) AS code FROM staging.ClientPlan_Staging WHERE SyncStatus='Processing' AND PlanCode IS NOT NULL AND LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))<>'' ORDER BY code;",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_ClientPlan",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach_PlanCode",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get_PlanCodes",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get_PlanCodes').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "CopyOne_Plan_To_Map",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DynamicsSource",
+									"query": {
+										"value": "@{concat('<fetch top=\"1\"><entity name=\"new_plan\"><attribute name=\"new_planid\"/><attribute name=\"new_plancode_sqlplanid\"/><filter><condition attribute=\"new_plancode_sqlplanid\" operator=\"eq\" value=\"', string(item().code), '\"/></filter></entity></fetch>')}",
+										"type": "Expression"
+									}
+								},
+								"sink": {
+									"type": "SqlServerSink"
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "new_plancode_sqlplanid"
+											},
+											"sink": {
+												"name": "new_plancode_sqlplanid"
+											}
+										},
+										{
+											"source": {
+												"path": "new_planid"
+											},
+											"sink": {
+												"name": "new_planid"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "CRM_Plans",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SQL_PlanMap",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Copy_ClientPlan_to_CRM",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ForEach_PlanCode",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderStoredProcedureName": "staging.usp_SelectClientPlanUpsertDataset",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DynamicsSink",
+						"writeBatchSize": 10,
+						"writeBehavior": "upsert",
+						"ignoreNullValues": true,
+						"alternateKeyName": "cr9c3_ak_plan_client"
+					},
+					"enableStaging": false,
+					"enableSkipIncompatibleRow": true
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_ClientPlan",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "CRM_clientplan",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2025-09-08T19:25:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

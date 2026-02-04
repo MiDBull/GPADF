@@ -1,0 +1,29 @@
+{
+	"name": "SQL_PlanMap",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "1_Plans"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "new_plancode_sqlplanid",
+				"type": "nvarchar"
+			},
+			{
+				"name": "new_planid",
+				"type": "uniqueidentifier"
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "CRM_PlanMap"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

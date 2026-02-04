@@ -1,0 +1,313 @@
+{
+	"name": "SQL_Investments",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "2_Investments"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Fund Company",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Code",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Account Number",
+				"type": "varchar"
+			},
+			{
+				"name": "Total Shares Issued",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "Total Shares Unissued",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "Average Cost",
+				"type": "decimal",
+				"precision": 19,
+				"scale": 10
+			},
+			{
+				"name": "Certificate Option",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Divident Cash Option",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Cheque Paid To",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Owner",
+				"type": "varchar"
+			},
+			{
+				"name": "Client ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Fund_Code",
+				"type": "varchar"
+			},
+			{
+				"name": "Leverage",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "Account Status",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Date Created",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "End Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Description",
+				"type": "varchar"
+			},
+			{
+				"name": "Settelement Method",
+				"type": "bit"
+			},
+			{
+				"name": "SendChequeTo",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Type Systematic Plan Information",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "PAC Frequency",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "PAC Amount",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "PAC Commission Rate",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "PAC Start Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "PAC Stop Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "PAC Restart Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "GIC TermDeposit Type",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GIC Start Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "GIC Stop Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "GIC Interest",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "GIC Amount",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "GIC Maturity Value",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "GIC Redeemable Flag",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GIC Term_Type",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GIC Term_Period",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GIC CashedOut Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "GIC Compound Frequency",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GIC Frequency",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GIC Certified Code",
+				"type": "varchar"
+			},
+			{
+				"name": "GIC FIReference",
+				"type": "varchar"
+			},
+			{
+				"name": "GIC Name",
+				"type": "varchar"
+			},
+			{
+				"name": "GIC First Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "GIC Cashout",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GIC Cashable Term",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Insurance PolicyNumber",
+				"type": "varchar"
+			},
+			{
+				"name": "Insurance Premium Payable for Value",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Insurance Premium Amount",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "Insurance Premium Mode",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Insurance Type",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Insurance Premium Payable for",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Insurance Annual Premium",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "Insurance Account Status",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Insurance Payment Status",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Insurance Application Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "InvestmentPKCode",
+				"type": "varchar"
+			},
+			{
+				"name": "Last_Modified_Date_PlanKYC",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "Investments_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

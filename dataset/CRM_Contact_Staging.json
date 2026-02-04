@@ -1,0 +1,30 @@
+{
+	"name": "CRM_Contact_Staging",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "1_Plans"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "contactid",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "new_clientid",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "CRM_Contact_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

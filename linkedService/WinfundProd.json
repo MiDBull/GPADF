@@ -1,0 +1,21 @@
+{
+	"name": "WinfundProd",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "GPVMSQL02",
+			"database": "WinfundSQL",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "ScribeOnline",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJjOWNmMThjZi02NmE5LTQyZmEtYmZkNy1iZDliNDZiODJjYTUiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "ProdIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

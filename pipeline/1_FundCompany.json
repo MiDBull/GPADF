@@ -1,0 +1,233 @@
+{
+	"name": "1_FundCompany",
+	"properties": {
+		"activities": [
+			{
+				"name": "StoredProcedure_RefreshData",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_RefreshFundCompanyData"
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Lookup_GetBatchToProcess",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "StoredProcedure_RefreshData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": "EXEC staging.usp_ProcessFundCompanyToCRM",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_FundCompany",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Lookup_ServicesAccount",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Lookup_GetBatchToProcess",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DynamicsSource",
+						"query": "<fetch top=\"1\"><entity name=\"systemuser\"><attribute name=\"systemuserid\" /><filter><condition attribute=\"fullname\" operator=\"eq\" value=\"Services Account\" /><condition attribute=\"isdisabled\" operator=\"eq\" value=\"0\" /></filter></entity></fetch>"
+					},
+					"dataset": {
+						"referenceName": "Dynamics_Users",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": true
+				}
+			},
+			{
+				"name": "Set_ServicesUserId",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Lookup_ServicesAccount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ServicesUserId",
+					"value": {
+						"value": "@activity('Lookup_ServicesAccount').output.firstRow.systemuserid",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach_ProcessRecords",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Set_ServicesUserId",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_GetBatchToProcess').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_ToCRM",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT [Fund Company Code] AS new_fundcompanycode, [Name] AS new_name, [Address] AS new_address, [Province] AS new_province, [Phone] AS new_phone, CAST([Approved] AS bit) AS new_approved, CAST([NM Participant] AS bit) AS new_nmparticipant, CAST([Status] AS int) AS new_status, [City] AS new_city, [Postal Code] AS new_postalcode, [Fax] AS new_fax, CAST([FundSERV Files] AS bit) AS new_fundservfiles, [StagingId], GETUTCDATE() AS new_datasynctimestamp FROM staging.FundCompany_Staging WHERE StagingId = @{item().StagingId}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DynamicsSink",
+									"writeBatchSize": 1,
+									"writeBehavior": "upsert",
+									"ignoreNullValues": true,
+									"alternateKeyName": "cr9c3_fundcompanynumber",
+									"additionalColumns": {
+										"ownerid@odata.bind": {
+											"type": "Expression",
+											"value": "@concat('/systemusers(', variables('ServicesUserId'), ')')"
+										}
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_FundCompany",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Dynamics_FundCompany",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "StoredProcedure_UpdateStatus",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach_ProcessRecords",
+						"dependencyConditions": [
+							"Succeeded",
+							"Failed",
+							"Skipped"
+						]
+					}
+				],
+				"policy": {
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "staging.usp_UpdateFundCompanyStatus",
+					"storedProcedureParameters": {
+						"BatchId": {
+							"value": 0,
+							"type": "Int"
+						},
+						"CommaSeparatedIds": {
+							"value": "1,2,3,4,5",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"variables": {
+			"CurrentBatchId": {
+				"type": "String",
+				"defaultValue": "0"
+			},
+			"ServicesUserId": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "0_Winfund Client info to CRM"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-08-13T18:45:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

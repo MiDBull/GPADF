@@ -1,0 +1,428 @@
+{
+	"name": "SQL_PlanStaging",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataMigrationProd",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "1_Plans"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Client",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ClientsList",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ClientCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Plan Status",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Advisor_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "AdvisorCode",
+				"type": "varchar"
+			},
+			{
+				"name": "Owner",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan Type",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "PlanID",
+				"type": "varchar"
+			},
+			{
+				"name": "LeveragedAccount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ITF",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "GroupAccount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Individual_Spousal_RRSP",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "LockedIn",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LockedIn_Province",
+				"type": "varchar"
+			},
+			{
+				"name": "Register_In",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Beneficiary",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "JointPlan",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Description",
+				"type": "varchar"
+			},
+			{
+				"name": "PlanCode",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Start_Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "End_Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "TFSA_Successor",
+				"type": "tinyint",
+				"precision": 3
+			},
+			{
+				"name": "Province",
+				"type": "varchar"
+			},
+			{
+				"name": "IntermediaryCode",
+				"type": "varchar"
+			},
+			{
+				"name": "Intermediary_Account_Code",
+				"type": "varchar"
+			},
+			{
+				"name": "RequiredSignature",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "SpousalTitle",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "Joint_Sex",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "SpousalFirstName",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalLastName",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalDateOfBirth",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalSIN",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalAddress",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalCity",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalProvince",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalPostalCode",
+				"type": "varchar"
+			},
+			{
+				"name": "SpousalCountry",
+				"type": "varchar"
+			},
+			{
+				"name": "BankAccountType",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Plan_Bank_Holder_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Bank_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Bank_Branch",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Bank_Account_Code",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Bank_Address",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Bank_City",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Bank_Province",
+				"type": "varchar"
+			},
+			{
+				"name": "BankCountry",
+				"type": "varchar"
+			},
+			{
+				"name": "Plan_Bank_PostalCode",
+				"type": "varchar"
+			},
+			{
+				"name": "KYCOnFileDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "LimitedTradingAuthorization",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "PowerOfAttorney",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "FreezePlan",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "KYCReviewDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "LTA_Date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "PercentSafety",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "PercentIncome",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "PercentGrowth",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "PercentSpeculation",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "PlanKYCTimeHorizon",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "RiskTolerance_VeryLow_Per",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "RiskTolerence_Low_Per",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "RiskTolerence_LM_Per",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "RiskTolerence_Medium_Per",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "RiskTolerence_MH_Per",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "RiskTolerence_High_Per",
+				"type": "real",
+				"precision": 7
+			},
+			{
+				"name": "RiskComposition_VeryLow_Per",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "RiskComposition_Low_Per",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "RiskComposition_LM_Per",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "RiskComposition_Medium_Per",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "RiskComposition_MH_Per",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "RiskComposition_High_Per",
+				"type": "money",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "DoesThisPlanPoseARiskAsItRelatesToAML",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "AreYouActingOnTheInstructionsOfAnotherIndividual",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "IntendedUseForThePlan",
+				"type": "varchar"
+			},
+			{
+				"name": "AreThereAnyOtherIndividualAuthorize",
+				"type": "smallint",
+				"precision": 5
+			},
+			{
+				"name": "DateNow",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Last_Modified_Date_PlanKYC",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "SMFRFlag",
+				"type": "char"
+			},
+			{
+				"name": "SyncStatus",
+				"type": "nvarchar"
+			},
+			{
+				"name": "RetryCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LastSyncAttempt",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "ErrorMessage",
+				"type": "nvarchar"
+			},
+			{
+				"name": "LastModifiedDate",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "AdvisorClientCRMGUID",
+				"type": "uniqueidentifier"
+			},
+			{
+				"name": "OwnerClientCRMGUID",
+				"type": "uniqueidentifier"
+			}
+		],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "Plans_Staging"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

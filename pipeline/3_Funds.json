@@ -1,0 +1,53 @@
+{
+	"name": "3_Funds",
+	"properties": {
+		"description": "Core fund upsert: SQL -> Dataverse (new_fund) via alternate key new_scribe_name. Source is staging.usp_RunFundPipeline. No TabularTranslator; SQL aliases match CRM fields.",
+		"activities": [
+			{
+				"name": "Copy_Funds_To_CRM_Core",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderStoredProcedureName": "[staging].[usp_RunFundPipeline]",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DynamicsSink",
+						"writeBatchSize": 10,
+						"writeBehavior": "upsert",
+						"alternateKeyName": "new_scribe_name",
+						"useAlternateKey": true
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_FundStaging",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "CRM_ProductList",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": [
+			"3_Funds",
+			"CoreFields",
+			"NoTranslator"
+		],
+		"lastPublishTime": "2025-08-28T15:29:49Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
