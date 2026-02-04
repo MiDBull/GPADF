@@ -6,7 +6,6 @@
 			{
 				"name": "RunClientContactPipeline",
 				"type": "SqlServerStoredProcedure",
-				"state": "Inactive",
 				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
