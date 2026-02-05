@@ -33,7 +33,7 @@
 						"writeBatchSize": 10,
 						"writeBehavior": "upsert",
 						"ignoreNullValues": false,
-						"alternateKeyName": "cr9c3_new_planid1",
+						"alternateKeyName": "cr9c3_plancode",
 						"bypassPowerAutomateFlows": false,
 						"useAlternateKey": true
 					},
