@@ -1,0 +1,96 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "GPDFactory"
+		},
+		"DataMigration_password": {
+			"value": ""
+		},
+		"DataMigrationProd_password": {
+			"value": ""
+		},
+		"Dataverse_prod_servicePrincipalCredential": {
+			"value": ""
+		},
+		"Dynamics365_servicePrincipalCredential": {
+			"value": ""
+		},
+		"Dynamics365v2_servicePrincipalCredential": {
+			"value": ""
+		},
+		"DynamicsProd_servicePrincipalCredential": {
+			"value": ""
+		},
+		"PipelineLogs_connectionString": {
+			"value": ""
+		},
+		"SqlServer1_password": {
+			"value": ""
+		},
+		"VieFundProd_password": {
+			"value": ""
+		},
+		"WinfundProd_password": {
+			"value": ""
+		},
+		"DataMigration_properties_typeProperties_server": {
+			"value": "10.8.0.6"
+		},
+		"DataMigration_properties_typeProperties_database": {
+			"value": "DataMigration"
+		},
+		"DataMigration_properties_typeProperties_userName": {
+			"value": "ScribeOnline"
+		},
+		"DataMigrationProd_properties_typeProperties_server": {
+			"value": "VieFund"
+		},
+		"DataMigrationProd_properties_typeProperties_database": {
+			"value": "DataMigration"
+		},
+		"DataMigrationProd_properties_typeProperties_userName": {
+			"value": "via"
+		},
+		"Dataverse_prod_properties_typeProperties_servicePrincipalId": {
+			"value": "ef1fb8c3-0e5c-4109-be9c-c8cbd90f857d"
+		},
+		"Dynamics365_properties_typeProperties_servicePrincipalId": {
+			"value": "73dc5163-9ba3-4baa-9aac-3bf52f3ca8a9"
+		},
+		"Dynamics365v2_properties_typeProperties_servicePrincipalId": {
+			"value": "73dc5163-9ba3-4baa-9aac-3bf52f3ca8a9"
+		},
+		"DynamicsProd_properties_typeProperties_servicePrincipalId": {
+			"value": "ef1fb8c3-0e5c-4109-be9c-c8cbd90f857d"
+		},
+		"SqlServer1_properties_typeProperties_server": {
+			"value": "10.8.0.6"
+		},
+		"SqlServer1_properties_typeProperties_database": {
+			"value": "winfundsql"
+		},
+		"SqlServer1_properties_typeProperties_userName": {
+			"value": "gpwealth"
+		},
+		"VieFundProd_properties_typeProperties_server": {
+			"value": "VieFund"
+		},
+		"VieFundProd_properties_typeProperties_database": {
+			"value": "VieFUND"
+		},
+		"VieFundProd_properties_typeProperties_userName": {
+			"value": "vie"
+		},
+		"WinfundProd_properties_typeProperties_server": {
+			"value": "GPVMSQL02"
+		},
+		"WinfundProd_properties_typeProperties_database": {
+			"value": "WinfundSQL"
+		},
+		"WinfundProd_properties_typeProperties_userName": {
+			"value": "ScribeOnline"
+		}
+	}
+}

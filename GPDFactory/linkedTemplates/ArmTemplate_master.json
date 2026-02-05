@@ -1,0 +1,285 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "GPDFactory"
+		},
+		"DataMigration_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'DataMigration'"
+		},
+		"DataMigrationProd_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'DataMigrationProd'"
+		},
+		"Dataverse_prod_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'Dataverse_prod'"
+		},
+		"Dynamics365_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'Dynamics365'"
+		},
+		"Dynamics365v2_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'Dynamics365v2'"
+		},
+		"DynamicsProd_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'DynamicsProd'"
+		},
+		"PipelineLogs_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'PipelineLogs'"
+		},
+		"SqlServer1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SqlServer1'"
+		},
+		"VieFundProd_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'VieFundProd'"
+		},
+		"WinfundProd_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'WinfundProd'"
+		},
+		"DataMigration_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "10.8.0.6"
+		},
+		"DataMigration_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "DataMigration"
+		},
+		"DataMigration_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "ScribeOnline"
+		},
+		"DataMigrationProd_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "VieFund"
+		},
+		"DataMigrationProd_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "DataMigration"
+		},
+		"DataMigrationProd_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "via"
+		},
+		"Dataverse_prod_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "ef1fb8c3-0e5c-4109-be9c-c8cbd90f857d"
+		},
+		"Dynamics365_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "73dc5163-9ba3-4baa-9aac-3bf52f3ca8a9"
+		},
+		"Dynamics365v2_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "73dc5163-9ba3-4baa-9aac-3bf52f3ca8a9"
+		},
+		"DynamicsProd_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "ef1fb8c3-0e5c-4109-be9c-c8cbd90f857d"
+		},
+		"SqlServer1_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "10.8.0.6"
+		},
+		"SqlServer1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "winfundsql"
+		},
+		"SqlServer1_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "gpwealth"
+		},
+		"VieFundProd_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "VieFund"
+		},
+		"VieFundProd_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "VieFUND"
+		},
+		"VieFundProd_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "vie"
+		},
+		"WinfundProd_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "GPVMSQL02"
+		},
+		"WinfundProd_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "WinfundSQL"
+		},
+		"WinfundProd_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "ScribeOnline"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "GPDFactory_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"Dataverse_prod_servicePrincipalCredential": {
+						"value": "[parameters('Dataverse_prod_servicePrincipalCredential')]"
+					},
+					"Dynamics365_servicePrincipalCredential": {
+						"value": "[parameters('Dynamics365_servicePrincipalCredential')]"
+					},
+					"Dynamics365v2_servicePrincipalCredential": {
+						"value": "[parameters('Dynamics365v2_servicePrincipalCredential')]"
+					},
+					"DynamicsProd_servicePrincipalCredential": {
+						"value": "[parameters('DynamicsProd_servicePrincipalCredential')]"
+					},
+					"PipelineLogs_connectionString": {
+						"value": "[parameters('PipelineLogs_connectionString')]"
+					},
+					"VieFundProd_password": {
+						"value": "[parameters('VieFundProd_password')]"
+					},
+					"Dataverse_prod_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('Dataverse_prod_properties_typeProperties_servicePrincipalId')]"
+					},
+					"Dynamics365_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('Dynamics365_properties_typeProperties_servicePrincipalId')]"
+					},
+					"Dynamics365v2_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('Dynamics365v2_properties_typeProperties_servicePrincipalId')]"
+					},
+					"DynamicsProd_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('DynamicsProd_properties_typeProperties_servicePrincipalId')]"
+					},
+					"VieFundProd_properties_typeProperties_server": {
+						"value": "[parameters('VieFundProd_properties_typeProperties_server')]"
+					},
+					"VieFundProd_properties_typeProperties_database": {
+						"value": "[parameters('VieFundProd_properties_typeProperties_database')]"
+					},
+					"VieFundProd_properties_typeProperties_userName": {
+						"value": "[parameters('VieFundProd_properties_typeProperties_userName')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "GPDFactory_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"DataMigration_password": {
+						"value": "[parameters('DataMigration_password')]"
+					},
+					"DataMigrationProd_password": {
+						"value": "[parameters('DataMigrationProd_password')]"
+					},
+					"SqlServer1_password": {
+						"value": "[parameters('SqlServer1_password')]"
+					},
+					"WinfundProd_password": {
+						"value": "[parameters('WinfundProd_password')]"
+					},
+					"DataMigration_properties_typeProperties_server": {
+						"value": "[parameters('DataMigration_properties_typeProperties_server')]"
+					},
+					"DataMigration_properties_typeProperties_database": {
+						"value": "[parameters('DataMigration_properties_typeProperties_database')]"
+					},
+					"DataMigration_properties_typeProperties_userName": {
+						"value": "[parameters('DataMigration_properties_typeProperties_userName')]"
+					},
+					"DataMigrationProd_properties_typeProperties_server": {
+						"value": "[parameters('DataMigrationProd_properties_typeProperties_server')]"
+					},
+					"DataMigrationProd_properties_typeProperties_database": {
+						"value": "[parameters('DataMigrationProd_properties_typeProperties_database')]"
+					},
+					"DataMigrationProd_properties_typeProperties_userName": {
+						"value": "[parameters('DataMigrationProd_properties_typeProperties_userName')]"
+					},
+					"SqlServer1_properties_typeProperties_server": {
+						"value": "[parameters('SqlServer1_properties_typeProperties_server')]"
+					},
+					"SqlServer1_properties_typeProperties_database": {
+						"value": "[parameters('SqlServer1_properties_typeProperties_database')]"
+					},
+					"SqlServer1_properties_typeProperties_userName": {
+						"value": "[parameters('SqlServer1_properties_typeProperties_userName')]"
+					},
+					"WinfundProd_properties_typeProperties_server": {
+						"value": "[parameters('WinfundProd_properties_typeProperties_server')]"
+					},
+					"WinfundProd_properties_typeProperties_database": {
+						"value": "[parameters('WinfundProd_properties_typeProperties_database')]"
+					},
+					"WinfundProd_properties_typeProperties_userName": {
+						"value": "[parameters('WinfundProd_properties_typeProperties_userName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'GPDFactory_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "GPDFactory_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'GPDFactory_ArmTemplate_1')]"
+			]
+		}
+	]
+}

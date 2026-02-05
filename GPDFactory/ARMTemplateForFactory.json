@@ -1,0 +1,5628 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "GPDFactory"
+		},
+		"DataMigration_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'DataMigration'"
+		},
+		"DataMigrationProd_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'DataMigrationProd'"
+		},
+		"Dataverse_prod_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'Dataverse_prod'"
+		},
+		"Dynamics365_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'Dynamics365'"
+		},
+		"Dynamics365v2_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'Dynamics365v2'"
+		},
+		"DynamicsProd_servicePrincipalCredential": {
+			"type": "secureString",
+			"metadata": "Secure string for 'servicePrincipalCredential' of 'DynamicsProd'"
+		},
+		"PipelineLogs_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'PipelineLogs'"
+		},
+		"SqlServer1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SqlServer1'"
+		},
+		"VieFundProd_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'VieFundProd'"
+		},
+		"WinfundProd_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'WinfundProd'"
+		},
+		"DataMigration_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "10.8.0.6"
+		},
+		"DataMigration_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "DataMigration"
+		},
+		"DataMigration_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "ScribeOnline"
+		},
+		"DataMigrationProd_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "VieFund"
+		},
+		"DataMigrationProd_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "DataMigration"
+		},
+		"DataMigrationProd_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "via"
+		},
+		"Dataverse_prod_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "ef1fb8c3-0e5c-4109-be9c-c8cbd90f857d"
+		},
+		"Dynamics365_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "73dc5163-9ba3-4baa-9aac-3bf52f3ca8a9"
+		},
+		"Dynamics365v2_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "73dc5163-9ba3-4baa-9aac-3bf52f3ca8a9"
+		},
+		"DynamicsProd_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "ef1fb8c3-0e5c-4109-be9c-c8cbd90f857d"
+		},
+		"SqlServer1_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "10.8.0.6"
+		},
+		"SqlServer1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "winfundsql"
+		},
+		"SqlServer1_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "gpwealth"
+		},
+		"VieFundProd_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "VieFund"
+		},
+		"VieFundProd_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "VieFUND"
+		},
+		"VieFundProd_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "vie"
+		},
+		"WinfundProd_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "GPVMSQL02"
+		},
+		"WinfundProd_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "WinfundSQL"
+		},
+		"WinfundProd_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "ScribeOnline"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/1_FundCompany')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "StoredProcedure_RefreshData",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_RefreshFundCompanyData"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Lookup_GetBatchToProcess",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "StoredProcedure_RefreshData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "EXEC staging.usp_ProcessFundCompanyToCRM",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_FundCompany",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Lookup_ServicesAccount",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Lookup_GetBatchToProcess",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DynamicsSource",
+								"query": "<fetch top=\"1\"><entity name=\"systemuser\"><attribute name=\"systemuserid\" /><filter><condition attribute=\"fullname\" operator=\"eq\" value=\"Services Account\" /><condition attribute=\"isdisabled\" operator=\"eq\" value=\"0\" /></filter></entity></fetch>"
+							},
+							"dataset": {
+								"referenceName": "Dynamics_Users",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Set_ServicesUserId",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup_ServicesAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ServicesUserId",
+							"value": {
+								"value": "@activity('Lookup_ServicesAccount').output.firstRow.systemuserid",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach_ProcessRecords",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Set_ServicesUserId",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup_GetBatchToProcess').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy_ToCRM",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": {
+												"value": "SELECT [Fund Company Code] AS new_fundcompanycode, [Name] AS new_name, [Address] AS new_address, [Province] AS new_province, [Phone] AS new_phone, CAST([Approved] AS bit) AS new_approved, CAST([NM Participant] AS bit) AS new_nmparticipant, CAST([Status] AS int) AS new_status, [City] AS new_city, [Postal Code] AS new_postalcode, [Fax] AS new_fax, CAST([FundSERV Files] AS bit) AS new_fundservfiles, [StagingId], GETUTCDATE() AS new_datasynctimestamp FROM staging.FundCompany_Staging WHERE StagingId = @{item().StagingId}",
+												"type": "Expression"
+											},
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 1,
+											"writeBehavior": "upsert",
+											"ignoreNullValues": true,
+											"alternateKeyName": "cr9c3_fundcompanynumber",
+											"additionalColumns": {
+												"ownerid@odata.bind": {
+													"type": "Expression",
+													"value": "@concat('/systemusers(', variables('ServicesUserId'), ')')"
+												}
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_FundCompany",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Dynamics_FundCompany",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "StoredProcedure_UpdateStatus",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "ForEach_ProcessRecords",
+								"dependencyConditions": [
+									"Succeeded",
+									"Failed",
+									"Skipped"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_UpdateFundCompanyStatus",
+							"storedProcedureParameters": {
+								"BatchId": {
+									"value": 0,
+									"type": "Int"
+								},
+								"CommaSeparatedIds": {
+									"value": "1,2,3,4,5",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"CurrentBatchId": {
+						"type": "String",
+						"defaultValue": "0"
+					},
+					"ServicesUserId": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-13T18:45:22Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_FundCompany')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_Users')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_FundCompany')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/1_Plan_Old')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Incremental sync of Plans to CRM new_plan entity with upsert",
+				"activities": [
+					{
+						"name": "RunPlanPipeline",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_RunPlanPipeline"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "GetDistinctClientCodes",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "RunPlanPipeline",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "SELECT STUFF((SELECT ',' + CAST(ClientCode AS NVARCHAR(100)) FROM (SELECT DISTINCT ClientCode FROM staging.Plans_Staging WHERE SyncStatus = 'Processing') sub FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'') AS ClientCodes",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_PlanStaging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "ClientGUID_Lookup",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "GetDistinctClientCodes",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DynamicsSource",
+								"query": {
+									"value": "@if(empty(activity('GetDistinctClientCodes').output.firstRow.ClientCodes), '<fetch><entity name=\"contact\"><attribute name=\"contactid\"/><attribute name=\"new_clientid\"/><filter><condition attribute=\"new_clientid\" operator=\"eq\" value=\"00000000\"/></filter></entity></fetch>', concat('<fetch><entity name=\"contact\"><attribute name=\"contactid\"/><attribute name=\"new_clientid\"/><filter type=\"and\"><condition attribute=\"new_clientid\" operator=\"in\">', concat('<value>', replace(activity('GetDistinctClientCodes').output.firstRow.ClientCodes, ',', '</value><value>'), '</value>'), '</condition></filter></entity></fetch>'))",
+									"type": "Expression"
+								}
+							},
+							"dataset": {
+								"referenceName": "Dynamics_contact",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "InsertClientContactGUIDs",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "ClientGUID_Lookup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_InsertClientContactGUIDs",
+							"storedProcedureParameters": {
+								"Json": {
+									"value": {
+										"value": "@string(activity('ClientGUID_Lookup').output.value)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Check_HasProcessingRows",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "InsertClientContactGUIDs",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "SELECT COUNT(1) AS RecordCount FROM staging.Plans_Staging WHERE SyncStatus = 'Processing'",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_PlanStaging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "If_HasRowsToCopy",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Check_HasProcessingRows",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(int(activity('Check_HasProcessingRows').output.firstRow.RecordCount), 0)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Copy_ToCRM",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderStoredProcedureName": "staging.usp_SelectPlanUpsertDataset",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 1,
+											"writeBehavior": "upsert",
+											"ignoreNullValues": true,
+											"alternateKeyName": "cr9c3_new_planid1"
+										},
+										"enableStaging": false,
+										"enableSkipIncompatibleRow": true,
+										"logSettings": {
+											"enableCopyActivityLog": true,
+											"copyActivityLogSettings": {
+												"logLevel": "Warning",
+												"enableReliableLogging": false
+											},
+											"logLocationSettings": {
+												"linkedServiceName": {
+													"referenceName": "PipelineLogs",
+													"type": "LinkedServiceReference"
+												},
+												"path": "copyactivity-logs"
+											}
+										},
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"name": "new_account",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_account",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_addressspouse",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_addressspouse",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_advisorid"
+													},
+													"sink": {
+														"name": "new_advisorid"
+													}
+												},
+												{
+													"source": {
+														"name": "new_advisorid@Microsoft.Dynamics.CRM.lookuplogicalname"
+													},
+													"sink": {
+														"name": "new_advisorid@Microsoft.Dynamics.CRM.lookuplogicalname"
+													}
+												},
+												{
+													"source": {
+														"name": "new_arethereanyotherindividualsentities",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_arethereanyotherindividualsentities",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_areyouactingontheinstructionsofanother",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_areyouactingontheinstructionsofanother",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_bankname",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_bankname",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_beneficiary",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_beneficiary",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_branch",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_branch",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_city",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_city",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_cityspouse",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_cityspouse",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_clientid"
+													},
+													"sink": {
+														"name": "new_clientid"
+													}
+												},
+												{
+													"source": {
+														"name": "new_clientid@Microsoft.Dynamics.CRM.lookuplogicalname"
+													},
+													"sink": {
+														"name": "new_clientid@Microsoft.Dynamics.CRM.lookuplogicalname"
+													}
+												},
+												{
+													"source": {
+														"name": "new_clientslist",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_clientslist",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_country",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_country",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_countryspouse",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_countryspouse",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_dateofbirthspouse",
+														"type": "DateTime"
+													},
+													"sink": {
+														"name": "new_dateofbirthspouse",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"name": "new_description",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_description",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_enddate",
+														"type": "DateTime"
+													},
+													"sink": {
+														"name": "new_enddate",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"name": "new_freezeplan",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_freezeplan",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_groupaccount",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_groupaccount",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_growth",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_growth",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_high",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_high",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_high1",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_high1",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_holdername",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_holdername",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_income",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_income",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_individualspousalrrsp",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_individualspousalrrsp",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_intendedusefortheplan",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_intendedusefortheplan",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_intermediaryaccount",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_intermediaryaccount",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_itf",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_itf",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_kyconfiledate",
+														"type": "DateTime"
+													},
+													"sink": {
+														"name": "new_kyconfiledate",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"name": "new_kycreviewdate",
+														"type": "DateTime"
+													},
+													"sink": {
+														"name": "new_kycreviewdate",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"name": "new_leveragedaccount",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_leveragedaccount",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_limitedtradingauthorisation",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_limitedtradingauthorisation",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_lockedin",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_lockedin",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_low",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_low",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_low1",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_low1",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_lowtomedium",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_lowtomedium",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_lowtomedium1",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_lowtomedium1",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_ltadate",
+														"type": "DateTime"
+													},
+													"sink": {
+														"name": "new_ltadate",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"name": "new_medium",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_medium",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_medium1",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_medium1",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_mediumtohigh",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_mediumtohigh",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_mediumtohigh1",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_mediumtohigh1",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_name",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_name",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_newintermediarycode",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_newintermediarycode",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_plancode_sqlplanid",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_plancode_sqlplanid",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_planid1",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_planid1",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_plankyctimehorizon",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_plankyctimehorizon",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_planstatus",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_planstatus",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_plantype",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_plantype",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_postalcode",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_postalcode",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_postalcodespouse",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_postalcodespouse",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_powerofattorney",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_powerofattorney",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_province",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_province",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_province1",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_province1",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_provincespouse",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_provincespouse",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_registerin",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_registerin",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_requiredsignature",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_requiredsignature",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_safety",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_safety",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_sex",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_sex",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_sinspouse",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_sinspouse",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_speculation",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_speculation",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_spousename",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_spousename",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_spouseslastname",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_spouseslastname",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_startdate",
+														"type": "DateTime"
+													},
+													"sink": {
+														"name": "new_startdate",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"name": "new_street",
+														"type": "String"
+													},
+													"sink": {
+														"name": "new_street",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"name": "new_tfsasuccessor",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_tfsasuccessor",
+														"type": "Boolean"
+													}
+												},
+												{
+													"source": {
+														"name": "new_title",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_title",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_type",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "new_type",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "new_verylow",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_verylow",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "new_verylow1",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "new_verylow1",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"name": "ownerid",
+														"type": "String"
+													},
+													"sink": {
+														"name": "ownerid",
+														"type": "Guid"
+													}
+												},
+												{
+													"source": {
+														"name": "ownerid@Microsoft.Dynamics.CRM.associatednavigationproperty",
+														"type": "String"
+													},
+													"sink": {
+														"name": "ownerid@Microsoft.Dynamics.CRM.associatednavigationproperty"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_PlanStaging",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "CRM_Plans",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"linkedServiceName": {
+										"referenceName": "DataMigrationProd",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-01-17T12:56:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_PlanStaging')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_contact')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_Plans')]",
+				"[concat(variables('factoryId'), '/linkedServices/PipelineLogs')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/1_Plans')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Insert new_plan record(s) from Plans_Staging into CRM (with contact GUID join)",
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "RunPlanPipeline",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderStoredProcedureName": "[[staging].[usp_SelectPlanUpsertDataset]",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DynamicsSink",
+								"writeBatchSize": 10,
+								"writeBehavior": "upsert",
+								"ignoreNullValues": false,
+								"alternateKeyName": "cr9c3_plancode",
+								"bypassPowerAutomateFlows": false,
+								"useAlternateKey": true
+							},
+							"enableStaging": false,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Info",
+									"enableReliableLogging": false
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "PipelineLogs",
+										"type": "LinkedServiceReference"
+									},
+									"path": "copyactivity-logs"
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "SQL_PlanStaging",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "CRM_Plans",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "RunPlanPipeline",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[staging].[usp_RunPlanPipeline]"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-01-17T12:56:56Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_PlanStaging')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_Plans')]",
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]",
+				"[concat(variables('factoryId'), '/linkedServices/PipelineLogs')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/1_UpsertPlans_FromClientStage')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get_PlanCodeCount",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": "SELECT COUNT(DISTINCT LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))) AS Cnt FROM staging.ClientPlan_Staging WHERE SyncStatus='Processing' AND PlanCode IS NOT NULL AND LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))<>'';",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_ClientPlan",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "HasPlanCodes",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get_PlanCodeCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(int(activity('Get_PlanCodeCount').output.firstRow.Cnt), 0)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Upsert_Plans_ByCode",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"sqlReaderQuery": "SELECT DISTINCT LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50)))) AS new_plancode_sqlplanid, CONCAT('Plan ', LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))) AS new_name FROM staging.ClientPlan_Staging WHERE SyncStatus='Processing' AND PlanCode IS NOT NULL AND LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))<>'';",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 10,
+											"writeBehavior": "upsert",
+											"alternateKeyName": "cr9c3_plancode"
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"path": "new_plancode_sqlplanid"
+													},
+													"sink": {
+														"name": "new_plancode_sqlplanid"
+													}
+												},
+												{
+													"source": {
+														"path": "new_name"
+													},
+													"sink": {
+														"name": "new_name"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_ClientPlan",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "CRM_Plans",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-14T15:08:08Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_ClientPlan')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_Plans')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/2_Advisors')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Sync Advisors to CRM account entity using staging pipeline and upsert",
+				"activities": [
+					{
+						"name": "RunAdvisorPipeline",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[staging].[usp_RunAdvisorPipeline]",
+							"storedProcedureParameters": {
+								"ForceUpdate": {
+									"value": {
+										"value": "@pipeline().parameters.ForceUpdate",
+										"type": "Expression"
+									},
+									"type": "Int"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Check_HasProcessingRows",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "RunAdvisorPipeline",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "SELECT COUNT(1) AS RecordCount FROM staging.Advisor_Staging WHERE SyncStatus = 'Processing'",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_AdvisorStaging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "If_HasRowsToCopy",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Check_HasProcessingRows",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(int(activity('Check_HasProcessingRows').output.firstRow.RecordCount), 0)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Copy_ToCRM",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": "SELECT [Advisor Code] AS new_advisorcode_advisor, LTRIM(RTRIM([First Name])) AS new_firstname_advisor, LTRIM(RTRIM([Last Name])) AS new_lastname_advisor, LTRIM(RTRIM([Account Name])) AS name, LTRIM(RTRIM([Business Name])) AS new_businessname_advisor, LTRIM(RTRIM([Account/Phone])) AS new_accountphone, LTRIM(RTRIM([E-mail])) AS emailaddress1, LTRIM(RTRIM([Federal BN])) AS new_federalbn, LTRIM(RTRIM([Provincial BN])) AS new_provincialbn, LTRIM(RTRIM([NRD_Number])) AS new_nrd_number, [Last_Modified_Date] AS new_datasynctimestamp, LTRIM(RTRIM([Address 1: City])) AS address1_city, LTRIM(RTRIM([Address 1: State/Province])) AS address1_stateorprovince, LTRIM(RTRIM([Address 1: ZIP/Postal Code])) AS address1_postalcode, LTRIM(RTRIM([Address 1: Country/Region])) AS address1_country, LTRIM(RTRIM([Address 1: Street 1])) AS address1_line1, LTRIM(RTRIM([Address 1: Telephone 2])) AS address1_telephone2, LTRIM(RTRIM([Address 1: Fax])) AS address1_fax, LTRIM(RTRIM([Web Site])) AS websiteurl, LTRIM(RTRIM([Ext])) AS new_ext, LTRIM(RTRIM([License #])) AS new_license_advisorlicense, [License Start Date] AS new_licensestartdate_advisorlicense, [License End Date] AS new_licenseenddate_advisorlicense, CAST([License Level] AS INT) AS new_licenselevel_advisorlicense, CAST([License Type] AS INT) AS new_licensetype_advisorlicense, LTRIM(RTRIM([Company_E & O])) AS new_company_errorsandommission, LTRIM(RTRIM([Policy #_E & O])) AS new_policyerrorsandommission, LTRIM(RTRIM([Coverage $_E & O])) AS new_coverage_errorsandommission, CAST([Coverage For_E & O] AS INT) AS new_coveragefor_errorsandommission, LTRIM(RTRIM([Sponsor])) AS new_sponsor_advisorlicenses, LTRIM(RTRIM([Premium $_E & O])) AS new_premium_errorsandommission, CAST([Premium Mode_E & O] AS INT) AS new_premiummode_errorsandommission, LTRIM(RTRIM([Deductible $_E & O])) AS new_deductible_errorsandommission, [Starting Date_E & O] AS new_startingdate_errorsandommission, [Ending Date_E & O] AS new_endingdate_errorsandommission, CAST([Alberta] AS BIT) AS new_alberta_advisor_license, CAST([British Columbia] AS BIT) AS new_britishcolumbia_advisor_license, CAST([Manitoba] AS BIT) AS new_manitoba_advisor_license, CAST([New Brunswick] AS BIT) AS new_newbrunswick_advisor_license, CAST([Newfoundland and Labrador] AS BIT) AS new_newfoundlandandlabrador_advisor_license, CAST([Northwest Territories] AS BIT) AS new_northwestterritories_advisor_license, CAST([Nova Scotia] AS BIT) AS new_novascotia_advisor_license, CAST([Ontario] AS BIT) AS new_ontario_advisor_license, CAST([Prince Edward Island] AS BIT) AS new_princeedwardisland_advisor_license, CAST([Quebec] AS BIT) AS new_quebec_advisor_license, AdvisorCRMGUID, OwnerCRMGUID, CONCAT('/systemusers(', OwnerCRMGUID, ')') AS ownerbind FROM staging.Advisor_Staging WHERE SyncStatus = 'Processing'",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 1,
+											"writeBehavior": "upsert",
+											"ignoreNullValues": true,
+											"alternateKeyName": "cr9c3_advisor_code",
+											"additionalColumns": {
+												"ownerid@odata.bind": {
+													"type": "Expression",
+													"value": "ownerbind"
+												}
+											}
+										},
+										"enableStaging": false,
+										"enableSkipIncompatibleRow": true,
+										"logSettings": {
+											"enableCopyActivityLog": true,
+											"copyActivityLogSettings": {
+												"logLevel": "Warning",
+												"enableReliableLogging": false
+											},
+											"logLocationSettings": {
+												"linkedServiceName": {
+													"referenceName": "PipelineLogs",
+													"type": "LinkedServiceReference"
+												},
+												"path": "copyactivity-logs"
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_AdvisorStaging",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Dynamics_account",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"linkedServiceName": {
+										"referenceName": "DataMigrationProd",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Step4_UpdateAdvisorStatus",
+						"type": "SqlServerStoredProcedure",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [
+							{
+								"activity": "If_HasRowsToCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_UpdateAdvisorStatus",
+							"storedProcedureParameters": {
+								"Status": {
+									"value": {
+										"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), 'Completed', 'Failed')",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"ErrorMessage": {
+									"value": {
+										"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), '', activity('If_HasRowsToCopy').error.message)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"ForceUpdate": {
+						"type": "Int",
+						"defaultValue": 0
+					}
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM"
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-01-28T19:44:55Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_AdvisorStaging')]",
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_account')]",
+				"[concat(variables('factoryId'), '/linkedServices/PipelineLogs')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/2_ClientPlan')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get_PlanCodes",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": "SELECT DISTINCT LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50)))) AS code FROM staging.ClientPlan_Staging WHERE SyncStatus='Processing' AND PlanCode IS NOT NULL AND LTRIM(RTRIM(CAST(PlanCode AS NVARCHAR(50))))<>'' ORDER BY code;",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_ClientPlan",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach_PlanCode",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get_PlanCodes",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get_PlanCodes').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "CopyOne_Plan_To_Map",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DynamicsSource",
+											"query": {
+												"value": "@{concat('<fetch top=\"1\"><entity name=\"new_plan\"><attribute name=\"new_planid\"/><attribute name=\"new_plancode_sqlplanid\"/><filter><condition attribute=\"new_plancode_sqlplanid\" operator=\"eq\" value=\"', string(item().code), '\"/></filter></entity></fetch>')}",
+												"type": "Expression"
+											}
+										},
+										"sink": {
+											"type": "SqlServerSink"
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"path": "new_plancode_sqlplanid"
+													},
+													"sink": {
+														"name": "new_plancode_sqlplanid"
+													}
+												},
+												{
+													"source": {
+														"path": "new_planid"
+													},
+													"sink": {
+														"name": "new_planid"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "CRM_Plans",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "SQL_PlanMap",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Copy_ClientPlan_to_CRM",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ForEach_PlanCode",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderStoredProcedureName": "staging.usp_SelectClientPlanUpsertDataset",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DynamicsSink",
+								"writeBatchSize": 10,
+								"writeBehavior": "upsert",
+								"ignoreNullValues": true,
+								"alternateKeyName": "cr9c3_ak_plan_client"
+							},
+							"enableStaging": false,
+							"enableSkipIncompatibleRow": true
+						},
+						"inputs": [
+							{
+								"referenceName": "SQL_ClientPlan",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "CRM_clientplan",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-09-08T19:25:22Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_ClientPlan')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_clientplan')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_Plans')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_PlanMap')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/2_Investments')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_ToCRM",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderStoredProcedureName": "[[staging].[usp_SelectInvestmentUpsertDataset]",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DynamicsSink",
+								"writeBatchSize": 10,
+								"writeBehavior": "upsert",
+								"ignoreNullValues": true,
+								"alternateKeyName": "cr9c3_investmentpkcodestring"
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "SQL_Investments",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "CRM_Investments",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "2_Investments"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-28T02:16:28Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_Investments')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_Investments')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/3_ComissionSetup')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "StoredProcedure_RefreshData",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_RefreshCommissionSetupData"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Lookup_GetBatchToProcess",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "StoredProcedure_RefreshData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "EXEC [staging].[usp_ProcessCommissionSetupToCRM] @BatchSize = 1000",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_CommissionSetup_Batch",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Set_RecordCount",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup_GetBatchToProcess",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "RecordCount",
+							"value": {
+								"value": "@if(greater(activity('Lookup_GetBatchToProcess').output.count, 0), 1, 0)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set_CurrentBatchId",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set_RecordCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "CurrentBatchId",
+							"value": {
+								"value": "@if(greater(activity('Lookup_GetBatchToProcess').output.count, 0), string(activity('Lookup_GetBatchToProcess').output.value[0].BatchId), '0')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Lookup_ServicesAccount",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Set_CurrentBatchId",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "01:00:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DynamicsSource",
+								"query": {
+									"value": "@if(greater(variables('RecordCount'), 0), '<fetch top=\"1\"><entity name=\"systemuser\"><attribute name=\"systemuserid\" /><filter><condition attribute=\"fullname\" operator=\"eq\" value=\"Services Account\" /><condition attribute=\"isdisabled\" operator=\"eq\" value=\"0\" /></filter></entity></fetch>', '')",
+									"type": "Expression"
+								}
+							},
+							"dataset": {
+								"referenceName": "Dynamics_new_advisorcode",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Set_ServicesUserId",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup_ServicesAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ServicesUserId",
+							"value": {
+								"value": "@if(greater(variables('RecordCount'), 0), activity('Lookup_ServicesAccount').output.firstRow.systemuserid, '')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach_ProcessRecords",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Set_ServicesUserId",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@if(greater(activity('Lookup_GetBatchToProcess').output.count, 0), activity('Lookup_GetBatchToProcess').output.value, json('[]'))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy_ToCRM",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "00:10:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": {
+												"value": "SELECT LTRIM(RTRIM([Name])) as new_name, LTRIM(RTRIM([WorkGroup Code])) AS new_workgroupcode, LTRIM(RTRIM([Rep Code])) AS new_repcode, TRY_CAST(NULLIF([Dealer Code], '') AS INT) AS new_dealercode_advisorcode, CASE WHEN [Rep Status] = 'Active' THEN 1 ELSE 2 END AS new_repstatus, CASE WHEN BranchManagerOverrideType = 1 THEN 1 ELSE 0 END AS new_branchmanageroverride_advisorcode, CASE WHEN DealerOverrideType = 1 THEN 1 ELSE 0 END AS new_dealeroverridetype, TRY_CAST(LTRIM(RTRIM([Branch Manager Override %])) AS DECIMAL(18,2)) AS new_branchmanageroverride, TRY_CAST(LTRIM(RTRIM([Dealer Override %])) AS DECIMAL(18,2)) AS new_dealeroverride, LTRIM(RTRIM([Manager Code])) AS new_managercode, TRY_CAST(LTRIM(RTRIM(Commission)) AS DECIMAL(18,2)) as new_commission_advisorcode, TRY_CAST(NULLIF([Rep Type], '') AS INT) AS new_reptype_advisorcode FROM [DataMigration].[staging].[CommissionSetup_Staging] WHERE StagingId = @{item().StagingId}",
+												"type": "Expression"
+											},
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 1,
+											"writeBehavior": "upsert",
+											"ignoreNullValues": true,
+											"alternateKeyName": "cr9c3_new_name"
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_CommissionSetup_Batch",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Dynamics_new_advisorcode",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "StoredProcedure_UpdateStatus",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "ForEach_ProcessRecords",
+								"dependencyConditions": [
+									"Succeeded",
+									"Failed",
+									"Skipped"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_UpdateCommissionSetupStatusBatch",
+							"storedProcedureParameters": {
+								"BatchId": {
+									"value": {
+										"value": "@if(greater(int(variables('CurrentBatchId')), 0), int(variables('CurrentBatchId')), json('null'))",
+										"type": "Expression"
+									},
+									"type": "Int32"
+								},
+								"Status": {
+									"value": {
+										"value": "@if(equals(activity('ForEach_ProcessRecords').status, 'Succeeded'), 'Processed', 'Failed')",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"ErrorMessage": {
+									"value": {
+										"value": "@if(equals(activity('ForEach_ProcessRecords').status, 'Succeeded'), '', activity('ForEach_ProcessRecords').error.message)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigrationProd",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"RecordCount": {
+						"type": "Integer",
+						"defaultValue": 0
+					},
+					"CurrentBatchId": {
+						"type": "String",
+						"defaultValue": "0"
+					},
+					"ServicesUserId": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-06-30T00:09:40Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_CommissionSetup_Batch')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_new_advisorcode')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/3_Funds')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Core fund upsert: SQL -> Dataverse (new_fund) via alternate key new_scribe_name. Source is staging.usp_RunFundPipeline. No TabularTranslator; SQL aliases match CRM fields.",
+				"activities": [
+					{
+						"name": "Copy_Funds_To_CRM_Core",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderStoredProcedureName": "[[staging].[usp_RunFundPipeline]",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DynamicsSink",
+								"writeBatchSize": 10,
+								"writeBehavior": "upsert",
+								"alternateKeyName": "new_scribe_name",
+								"useAlternateKey": true
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "SQL_FundStaging",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "CRM_ProductList",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [
+					"3_Funds",
+					"CoreFields",
+					"NoTranslator"
+				],
+				"lastPublishTime": "2025-08-28T15:29:49Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_FundStaging')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_ProductList')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/4_ClientContact')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Runs full ClientContact sync with CRM upsert using direct SQL source and CRM GUID lookup",
+				"activities": [
+					{
+						"name": "RunClientContactPipeline",
+						"type": "SqlServerStoredProcedure",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[staging].[usp_RunClientContactPipeline_v2]"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Check_HasProcessingRows",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "RunClientContactPipeline",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "SELECT COUNT(1) AS RecordCount FROM staging.ClientContact_Staging WHERE SyncStatus = 'Processing'",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_ClientContact_Batch",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "If_HasRowsToCopy",
+						"type": "IfCondition",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [
+							{
+								"activity": "Check_HasProcessingRows",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(int(activity('Check_HasProcessingRows').output.firstRow.RecordCount), 0)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Copy_ToCRM",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": "SELECT LTRIM(RTRIM([Client ID])) AS new_clientid, LTRIM(RTRIM([Client First Name])) AS firstname, LTRIM(RTRIM([Client Last Name])) AS lastname, LTRIM(RTRIM([Client E-mail])) AS emailaddress1, LTRIM(RTRIM([Client Home Phone])) AS telephone1, LTRIM(RTRIM([Client Business Phone])) AS telephone2, REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LTRIM(RTRIM([Client Cell Phone])), CHAR(0), ''), CHAR(1), ''), CHAR(2), ''), CHAR(3), ''), CHAR(4), '') AS mobilephone, LTRIM(RTRIM([Client Fax])) AS fax, LTRIM(RTRIM([Client Address])) AS address1_line1, LTRIM(RTRIM([Client City])) AS address1_city, LTRIM(RTRIM([Client Province])) AS address1_stateorprovince, LTRIM(RTRIM([Client Postal Code])) AS address1_postalcode, LTRIM(RTRIM([Client Country])) AS address1_country, CAST([Client Type] AS INT) AS new_clienttype, SYSDATETIME() AS new_datasynctimestamp, CASE WHEN TRY_CAST([Net Worth (a+b+c)] AS MONEY) < 0 THEN NULL ELSE TRY_CAST([Net Worth (a+b+c)] AS MONEY) END AS new_networth, CAST([Investment Knowledge] AS INT) AS new_investmentknowledge_optionset, LTRIM(RTRIM([Employer Name])) AS new_employername, AdvisorClientCRMGUID AS parentcustomerid, 'account' AS [parentcustomerid@EntityReference], OwnerClientCRMGUID AS ownerid, 'systemuser' AS [ownerid@EntityReference] FROM staging.ClientContact_Staging WHERE SyncStatus = 'Processing'",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 1,
+											"writeBehavior": "upsert",
+											"ignoreNullValues": true,
+											"alternateKeyName": "cr9c3_clientid"
+										},
+										"enableStaging": false,
+										"enableSkipIncompatibleRow": true
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_ClientContact_Batch",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Dynamics_contact",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"linkedServiceName": {
+										"referenceName": "DataMigration",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Build_FetchXML",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "Copy_ToCRM",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": "EXEC [staging].[usp_BuildClientFetchXML]",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "SQL_ClientContact_Batch",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"firstRowOnly": true
+									},
+									"linkedServiceName": {
+										"referenceName": "DataMigration",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Fetch_ClientGUIDsFromCRM",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Build_FetchXML",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DynamicsSource",
+											"query": {
+												"value": "@activity('Build_FetchXML').output.firstRow.FetchXML",
+												"type": "Expression"
+											}
+										},
+										"sink": {
+											"type": "SqlSink",
+											"preCopyScript": "TRUNCATE TABLE staging.CRM_ClientMap"
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "Dynamics_contact",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "SQL_ClientMap",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Step4_UpdateClientContactStatus",
+						"type": "SqlServerStoredProcedure",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [
+							{
+								"activity": "If_HasRowsToCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[staging].[usp_UpdateClientContactStatus_v2]",
+							"storedProcedureParameters": {
+								"Status": {
+									"value": {
+										"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), 'Completed', 'Failed')",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"ErrorMessage": {
+									"value": {
+										"value": "@if(equals(activity('If_HasRowsToCopy').status, 'Succeeded'), '', activity('If_HasRowsToCopy').error.message)",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM"
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-02-04T18:10:20Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_ClientContact_Batch')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_contact')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_ClientMap')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/5_IdentificationInformation')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Refresh staging, resolve CRM lookups, upsert identification info, update sync status",
+				"activities": [
+					{
+						"name": "StoredProcedure_RefreshData",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_RefreshIdentificationData"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Lookup_GetBatchToProcess",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "StoredProcedure_RefreshData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "EXEC staging.usp_ProcessIdentificationToCRM @BatchSize = 10",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_IdentificationInformation",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Lookup_ServicesAccount",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Lookup_GetBatchToProcess",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DynamicsSource",
+								"query": "<fetch top=\"1\"><entity name=\"systemuser\"><attribute name=\"systemuserid\" /><filter><condition attribute=\"fullname\" operator=\"eq\" value=\"Services Account\" /><condition attribute=\"isdisabled\" operator=\"eq\" value=\"0\" /></filter></entity></fetch>"
+							},
+							"dataset": {
+								"referenceName": "Dynamics_Users",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Set_ServicesUserId",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup_ServicesAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ServicesUserId",
+							"value": {
+								"value": "@activity('Lookup_ServicesAccount').output.firstRow.systemuserid",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach_ProcessRecords",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Set_ServicesUserId",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup_GetBatchToProcess').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Lookup_ClientContact",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DynamicsSource",
+											"query": {
+												"value": "@concat('<fetch top=\"1\"><entity name=\"contact\"><attribute name=\"contactid\"/><filter><condition attribute=\"new_clientid\" operator=\"eq\" value=\"', item().new_clientid, '\"/></filter></entity></fetch>')",
+												"type": "Expression"
+											}
+										},
+										"dataset": {
+											"referenceName": "Dynamics_contact",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "Copy_ToCRM",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Lookup_ClientContact",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": {
+												"value": "SELECT IdentificationPKCode AS new_winfundpkcode, ClientID AS new_clientid, Date AS new_date, IDType AS new_idtype, Name AS new_name, Province AS new_province, Country AS new_country, Description AS new_description, IssuePlace AS new_issueplace, [Identification#] AS new_identification, SYSDATETIME() AS new_datasynctimestamp FROM winfundsql.dbo.Scribe_IdentificationInformation WHERE IdentificationPKCode = '@{item().new_winfundpkcode}'",
+												"type": "Expression"
+											},
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 1,
+											"writeBehavior": "upsert",
+											"ignoreNullValues": true,
+											"alternateKeyName": "cr9c3_new_winfundpkcode",
+											"additionalColumns": {
+												"ownerid@odata.bind": {
+													"type": "Expression",
+													"value": "@concat('/systemusers(', variables('ServicesUserId'), ')')"
+												},
+												"new_identificationid@odata.bind": {
+													"type": "Expression",
+													"value": "@if(contains(activity('Lookup_ClientContact').output, 'firstRow'), concat('/contacts(', activity('Lookup_ClientContact').output.firstRow.contactid, ')'), '')"
+												}
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_IdentificationInformation",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Dynamics_identificationinformation",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "StoredProcedure_UpdateStatus",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "ForEach_ProcessRecords",
+								"dependencyConditions": [
+									"Succeeded",
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_UpdateIdentificationStatusBatch",
+							"storedProcedureParameters": {
+								"Status": {
+									"value": {
+										"value": "@if(equals(activity('ForEach_ProcessRecords').status, 'Succeeded'), 'Completed', 'Failed')",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"ServicesUserId": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-06-29T14:32:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_IdentificationInformation')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_Users')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_contact')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_identificationinformation')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/6_ClientFamilyNetwork key in crm issues')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Refresh ClientFamilyNetwork staging, resolve lookups, upsert into CRM, update status",
+				"activities": [
+					{
+						"name": "StoredProcedure_RefreshData",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_RefreshClientFamilyNetworkData"
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Lookup_GetBatchToProcess",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "StoredProcedure_RefreshData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlSource",
+								"sqlReaderQuery": "EXEC staging.usp_ProcessClientFamilyNetworkToCRM @BatchSize = 10",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_ClientNetwork",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Lookup_ServicesAccount",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Lookup_GetBatchToProcess",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DynamicsSource",
+								"query": "<fetch top=\"1\"><entity name=\"systemuser\"><attribute name=\"systemuserid\" /><filter><condition attribute=\"fullname\" operator=\"eq\" value=\"Services Account\" /><condition attribute=\"isdisabled\" operator=\"eq\" value=\"0\" /></filter></entity></fetch>"
+							},
+							"dataset": {
+								"referenceName": "Dynamics_Users",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "Set_ServicesUserId",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup_ServicesAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ServicesUserId",
+							"value": {
+								"value": "@activity('Lookup_ServicesAccount').output.firstRow.systemuserid",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach_ProcessRecords",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Set_ServicesUserId",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup_GetBatchToProcess').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Lookup_ClientContact",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DynamicsSource",
+											"query": {
+												"value": "@concat('<fetch top=\"1\"><entity name=\"contact\"><attribute name=\"contactid\"/><filter><condition attribute=\"new_clientid\" operator=\"eq\" value=\"', item().ClientID, '\"/></filter></entity></fetch>')",
+												"type": "Expression"
+											}
+										},
+										"dataset": {
+											"referenceName": "Dynamics_contact",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "Copy_ToCRM",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Lookup_ClientContact",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": {
+												"value": "SELECT * FROM staging.ClientFamilyNetwork_Staging WHERE ClientNetworkPKCode = @{item().ClientNetworkPKCode}",
+												"type": "Expression"
+											},
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DynamicsSink",
+											"writeBatchSize": 1,
+											"writeBehavior": "upsert",
+											"ignoreNullValues": true,
+											"alternateKeyName": "cr9c3_clientnetworkpkcode",
+											"additionalColumns": {
+												"ownerid@odata.bind": {
+													"type": "Expression",
+													"value": "@concat('/systemusers(', variables('ServicesUserId'), ')')"
+												},
+												"new_client@odata.bind": {
+													"type": "Expression",
+													"value": "@if(contains(activity('Lookup_ClientContact').output, 'firstRow'), concat('/contacts(', activity('Lookup_ClientContact').output.firstRow.contactid, ')'), '')"
+												},
+												"new_networkclientid@odata.bind": {
+													"type": "Expression",
+													"value": "@if(contains(activity('Lookup_ClientContact').output, 'firstRow'), concat('/contacts(', activity('Lookup_ClientContact').output.firstRow.contactid, ')'), '')"
+												}
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "SQL_ClientNetwork",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Dynamics_ClientFamilyNetwork",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "StoredProcedure_UpdateStatus",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "ForEach_ProcessRecords",
+								"dependencyConditions": [
+									"Succeeded",
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "staging.usp_UpdateClientFamilyNetworkStatusBatch",
+							"storedProcedureParameters": {
+								"Status": {
+									"value": {
+										"value": "@if(equals(activity('ForEach_ProcessRecords').status, 'Succeeded'), 'Completed', 'Failed')",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "DataMigration",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"ServicesUserId": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-06-29T14:32:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_ClientNetwork')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_Users')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_contact')]",
+				"[concat(variables('factoryId'), '/datasets/Dynamics_ClientFamilyNetwork')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tmp_fullfundGUIDsync')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Until_AllMapped",
+						"type": "Until",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(activity('Build_FundFetchXML').output.firstRow.FetchXML, '')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Build_FundFetchXML",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlSource",
+											"sqlReaderQuery": "EXEC [staging].[usp_BuildFundFetchXML] @BatchSize = 50, @ExcludeAlreadyMapped = 1",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "SQL_FundStaging",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"firstRowOnly": true
+									},
+									"linkedServiceName": {
+										"referenceName": "DataMigrationProd",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Copy_FundGUIDs_To_CRM_FundMap",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Build_FundFetchXML",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DynamicsSource",
+											"query": {
+												"value": "@activity('Build_FundFetchXML').output.firstRow.FetchXML",
+												"type": "Expression"
+											}
+										},
+										"sink": {
+											"type": "SqlSink"
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"path": "Name"
+													},
+													"sink": {
+														"name": "Name"
+													}
+												},
+												{
+													"source": {
+														"path": "new_fundid"
+													},
+													"sink": {
+														"name": "new_fundid"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "CRM_ProductList",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "SQL_FundMap",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							],
+							"limit": {
+								"timeout": "7.00:00:00",
+								"maxIterationCount": 10000
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-27T13:30:07Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_FundStaging')]",
+				"[concat(variables('factoryId'), '/datasets/CRM_ProductList')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_FundMap')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CRM_ClientMap')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "ClientCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "contactid",
+						"type": "uniqueidentifier"
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "CRM_ClientMap"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CRM_Contact_Staging')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "contactid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "new_clientid",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "CRM_Contact_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CRM_Investments')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "2_Investments"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_investment"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CRM_Plans')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_plan"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CRM_ProductList')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "3_Funds"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_fund"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CRM_clientplan')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_clientplan"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_ClientContact')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/4_ClientContact_To_CRM"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "contact"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_ClientFamilyNetwork')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Dynamics365v2",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/6_ClientFamilyNetwork"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_clientnetwork"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Dynamics365v2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_FundCompany')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/1_FundCompany_To_CRM"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_fundcompany",
+					"alternateKeyName": "new_fundcompanycode"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_Users')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "systemuser"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_account')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "account"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_contact')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "contact"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_identificationinformation')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Dynamics365v2",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/5_IdentificationInformation_To_CRM"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_identificationinformation"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Dynamics365v2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics_new_advisorcode')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DynamicsProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/3_CommissionSetup_To_CRM"
+				},
+				"annotations": [],
+				"type": "DynamicsEntity",
+				"schema": [],
+				"typeProperties": {
+					"entityName": "new_advisorcode"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DynamicsProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_AdvisorStaging')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/2_Advisors_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_Advisors')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "WinfundProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/2_Advisors_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Scribe_Advisors"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/WinfundProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_ClientContact_Batch')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/4_ClientContact_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "ClientContact_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_ClientMap')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/4_ClientContact_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "ClientCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "contactid",
+						"type": "uniqueidentifier"
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "CRM_ClientMap"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_ClientNetwork')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/6_ClientFamilyNetwork"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "ClientNetworkPKCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Relationship",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "NetworkName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ClientID",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ClientFirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ClientLastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryTitle",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SecondaryFirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryLastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryDateOfBirth",
+						"type": "date"
+					},
+					{
+						"name": "SecondarySINNumber",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryGender",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SecondaryMaritalStatus",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SecondaryBusinessPhone",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryCellPhone",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryHomePhone",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryEmailAddress",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryBusinessPhoneExt",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SameAddress",
+						"type": "bit"
+					},
+					{
+						"name": "SecondaryAddress",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryCity",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryProvince",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryCountry",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SecondaryPostalCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Owner",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ExtractedDateTime",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "LastModifiedDate_Person",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "LastModifiedDate_Address",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "SyncStatus",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastSyncAttempt",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "ErrorMessage",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "ClientFamilyNetwork_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_ClientPlan')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "PlanCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ClientCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Plan_GUID",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "Client_GUID",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "SyncStatus",
+						"type": "nvarchar"
+					},
+					{
+						"name": "RetryCount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "LastSyncAttempt",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "ErrorMessage",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastModifiedDate",
+						"type": "datetime2",
+						"scale": 7
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "ClientPlan_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_Clients')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/4_ClientContact_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Fund Company Code",
+						"type": "varchar"
+					},
+					{
+						"name": "Address",
+						"type": "varchar"
+					},
+					{
+						"name": "Province",
+						"type": "char"
+					},
+					{
+						"name": "Phone",
+						"type": "char"
+					},
+					{
+						"name": "Approved",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "NM Participant",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Status",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "City",
+						"type": "varchar"
+					},
+					{
+						"name": "Postal Code",
+						"type": "char"
+					},
+					{
+						"name": "Fax",
+						"type": "char"
+					},
+					{
+						"name": "FundSERV Files",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Owner",
+						"type": "varchar"
+					},
+					{
+						"name": "DateNow",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Last_Modified_Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "ClientContact_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_CommissionSetup')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "WinfundProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/3_CommissionSetup_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Scribe_CommissionSetup"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/WinfundProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_CommissionSetup_Batch')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/3_CommissionSetup_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "CommissionSetup_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_Dummy')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Dummy",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "Dummy"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_FundCompany')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/1_FundCompany_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "FundCompany_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_FundMap')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "3_Funds"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "new_fundid",
+						"type": "uniqueidentifier"
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "CRM_FundMap"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_FundStaging')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "3_Funds"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Fund Code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Series",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FundLinkId",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Fund Company",
+						"type": "nvarchar"
+					},
+					{
+						"name": "new_fundcompanyid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Descriptive Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Short Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Investment Objective",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ISIN",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Cusip",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Category",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Category2",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Fund Type Code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Product Type",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Fund Status",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Registered",
+						"type": "bit"
+					},
+					{
+						"name": "Group",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Rate Type",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Price",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Minimum Initial Investment",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Safety Per",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 4
+					},
+					{
+						"name": "Income Per",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 4
+					},
+					{
+						"name": "Growth Per",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 4
+					},
+					{
+						"name": "Speculation Per",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 4
+					},
+					{
+						"name": "Date",
+						"type": "date"
+					},
+					{
+						"name": "Mature Date",
+						"type": "date"
+					},
+					{
+						"name": "Last_Modified_Date",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "DateNow",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "CreatedDate",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "LastModifiedDate",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "SyncStatus",
+						"type": "nvarchar"
+					},
+					{
+						"name": "RetryCount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "LastSyncAttempt",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "ErrorMessage",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "Fund_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_IdentificationInformation')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "0_Winfund Client info to CRM/5_IdentificationInformation_To_CRM"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Owner",
+						"type": "varchar"
+					},
+					{
+						"name": "IDType",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Description",
+						"type": "varchar"
+					},
+					{
+						"name": "Identification#",
+						"type": "varchar"
+					},
+					{
+						"name": "IssuePlace",
+						"type": "varchar"
+					},
+					{
+						"name": "Province",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "varchar"
+					},
+					{
+						"name": "Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "ClientID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "IdentificationPKCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "DateNow",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Last_Modified_Date_ID",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Last_Modified_Date_Client",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "IdentificationInformation_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_Investments')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "2_Investments"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Fund Company",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Code",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Account Number",
+						"type": "varchar"
+					},
+					{
+						"name": "Total Shares Issued",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Total Shares Unissued",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Average Cost",
+						"type": "decimal",
+						"precision": 19,
+						"scale": 10
+					},
+					{
+						"name": "Certificate Option",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Divident Cash Option",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Cheque Paid To",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Owner",
+						"type": "varchar"
+					},
+					{
+						"name": "Client ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Fund_Code",
+						"type": "varchar"
+					},
+					{
+						"name": "Leverage",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Account Status",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Date Created",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "End Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Description",
+						"type": "varchar"
+					},
+					{
+						"name": "Settelement Method",
+						"type": "bit"
+					},
+					{
+						"name": "SendChequeTo",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Type Systematic Plan Information",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "PAC Frequency",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "PAC Amount",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "PAC Commission Rate",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "PAC Start Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "PAC Stop Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "PAC Restart Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "GIC TermDeposit Type",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GIC Start Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "GIC Stop Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "GIC Interest",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "GIC Amount",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "GIC Maturity Value",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "GIC Redeemable Flag",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GIC Term_Type",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GIC Term_Period",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GIC CashedOut Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "GIC Compound Frequency",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GIC Frequency",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GIC Certified Code",
+						"type": "varchar"
+					},
+					{
+						"name": "GIC FIReference",
+						"type": "varchar"
+					},
+					{
+						"name": "GIC Name",
+						"type": "varchar"
+					},
+					{
+						"name": "GIC First Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "GIC Cashout",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GIC Cashable Term",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Insurance PolicyNumber",
+						"type": "varchar"
+					},
+					{
+						"name": "Insurance Premium Payable for Value",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Insurance Premium Amount",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Insurance Premium Mode",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Insurance Type",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Insurance Premium Payable for",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Insurance Annual Premium",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Insurance Account Status",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Insurance Payment Status",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Insurance Application Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "InvestmentPKCode",
+						"type": "varchar"
+					},
+					{
+						"name": "Last_Modified_Date_PlanKYC",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "Investments_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_PlanMap')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigrationProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "new_plancode_sqlplanid",
+						"type": "nvarchar"
+					},
+					{
+						"name": "new_planid",
+						"type": "uniqueidentifier"
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "CRM_PlanMap"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_PlanStaging')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataMigration",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Client",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ClientsList",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ClientCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Plan Status",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Advisor_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "AdvisorCode",
+						"type": "varchar"
+					},
+					{
+						"name": "Owner",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan Type",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "PlanID",
+						"type": "varchar"
+					},
+					{
+						"name": "LeveragedAccount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ITF",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "GroupAccount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Individual_Spousal_RRSP",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "LockedIn",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "LockedIn_Province",
+						"type": "varchar"
+					},
+					{
+						"name": "Register_In",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Beneficiary",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "JointPlan",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Description",
+						"type": "varchar"
+					},
+					{
+						"name": "PlanCode",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Start_Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "End_Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "TFSA_Successor",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Province",
+						"type": "varchar"
+					},
+					{
+						"name": "IntermediaryCode",
+						"type": "varchar"
+					},
+					{
+						"name": "Intermediary_Account_Code",
+						"type": "varchar"
+					},
+					{
+						"name": "RequiredSignature",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "SpousalTitle",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Joint_Sex",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "SpousalFirstName",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalLastName",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalDateOfBirth",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalSIN",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalAddress",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalCity",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalProvince",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalPostalCode",
+						"type": "varchar"
+					},
+					{
+						"name": "SpousalCountry",
+						"type": "varchar"
+					},
+					{
+						"name": "BankAccountType",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Plan_Bank_Holder_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Bank_Name",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Bank_Branch",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Bank_Account_Code",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Bank_Address",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Bank_City",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Bank_Province",
+						"type": "varchar"
+					},
+					{
+						"name": "BankCountry",
+						"type": "varchar"
+					},
+					{
+						"name": "Plan_Bank_PostalCode",
+						"type": "varchar"
+					},
+					{
+						"name": "KYCOnFileDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "LimitedTradingAuthorization",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "PowerOfAttorney",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "FreezePlan",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "KYCReviewDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "LTA_Date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "PercentSafety",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "PercentIncome",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "PercentGrowth",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "PercentSpeculation",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "PlanKYCTimeHorizon",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "RiskTolerance_VeryLow_Per",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "RiskTolerence_Low_Per",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "RiskTolerence_LM_Per",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "RiskTolerence_Medium_Per",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "RiskTolerence_MH_Per",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "RiskTolerence_High_Per",
+						"type": "real",
+						"precision": 7
+					},
+					{
+						"name": "RiskComposition_VeryLow_Per",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "RiskComposition_Low_Per",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "RiskComposition_LM_Per",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "RiskComposition_Medium_Per",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "RiskComposition_MH_Per",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "RiskComposition_High_Per",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "DoesThisPlanPoseARiskAsItRelatesToAML",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "AreYouActingOnTheInstructionsOfAnotherIndividual",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "IntendedUseForThePlan",
+						"type": "varchar"
+					},
+					{
+						"name": "AreThereAnyOtherIndividualAuthorize",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "DateNow",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "Last_Modified_Date_PlanKYC",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "SMFRFlag",
+						"type": "char"
+					},
+					{
+						"name": "SyncStatus",
+						"type": "nvarchar"
+					},
+					{
+						"name": "RetryCount",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "LastSyncAttempt",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "ErrorMessage",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastModifiedDate",
+						"type": "datetime2",
+						"scale": 7
+					},
+					{
+						"name": "AdvisorClientCRMGUID",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "OwnerClientCRMGUID",
+						"type": "uniqueidentifier"
+					}
+				],
+				"typeProperties": {
+					"schema": "staging",
+					"table": "Plans_Staging"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_Plans')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "WinfundProd",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "1_Plans"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Scribe_Plan"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/WinfundProd')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DataMigration')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"server": "[parameters('DataMigration_properties_typeProperties_server')]",
+					"database": "[parameters('DataMigration_properties_typeProperties_database')]",
+					"encrypt": "optional",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('DataMigration_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('DataMigration_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "StagingIR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/StagingIR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DataMigrationProd')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"server": "[parameters('DataMigrationProd_properties_typeProperties_server')]",
+					"database": "[parameters('DataMigrationProd_properties_typeProperties_database')]",
+					"encrypt": "optional",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('DataMigrationProd_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('DataMigrationProd_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "ProdIR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ProdIR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dataverse_prod')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "CommonDataServiceForApps",
+				"typeProperties": {
+					"deploymentType": "Online",
+					"serviceUri": "https://gpwealthmgmtco.crm3.dynamics.com",
+					"authenticationType": "AADServicePrincipal",
+					"servicePrincipalId": "[parameters('Dataverse_prod_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalCredential": {
+						"type": "SecureString",
+						"value": "[parameters('Dataverse_prod_servicePrincipalCredential')]"
+					},
+					"servicePrincipalCredentialType": "ServicePrincipalKey"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics365')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Dynamics",
+				"typeProperties": {
+					"deploymentType": "Online",
+					"serviceUri": "https://org13bca9a9.crm3.dynamics.com/",
+					"authenticationType": "AADServicePrincipal",
+					"servicePrincipalId": "[parameters('Dynamics365_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalCredential": {
+						"type": "SecureString",
+						"value": "[parameters('Dynamics365_servicePrincipalCredential')]"
+					},
+					"servicePrincipalCredentialType": "ServicePrincipalKey"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dynamics365v2')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Dynamics",
+				"typeProperties": {
+					"deploymentType": "Online",
+					"serviceUri": "https://org13bca9a9.crm3.dynamics.com/",
+					"authenticationType": "AADServicePrincipal",
+					"servicePrincipalId": "[parameters('Dynamics365v2_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalCredential": {
+						"type": "SecureString",
+						"value": "[parameters('Dynamics365v2_servicePrincipalCredential')]"
+					},
+					"servicePrincipalCredentialType": "ServicePrincipalKey"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DynamicsProd')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Dynamics",
+				"typeProperties": {
+					"deploymentType": "Online",
+					"serviceUri": "https://gpwealthmgmtco.crm3.dynamics.com",
+					"authenticationType": "AADServicePrincipal",
+					"servicePrincipalId": "[parameters('DynamicsProd_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalCredential": {
+						"type": "SecureString",
+						"value": "[parameters('DynamicsProd_servicePrincipalCredential')]"
+					},
+					"servicePrincipalCredentialType": "ServicePrincipalKey"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PipelineLogs')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('PipelineLogs_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SqlServer1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"server": "[parameters('SqlServer1_properties_typeProperties_server')]",
+					"database": "[parameters('SqlServer1_properties_typeProperties_database')]",
+					"encrypt": "optional",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('SqlServer1_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('SqlServer1_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "StagingIR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/StagingIR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/VieFundProd')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"server": "[parameters('VieFundProd_properties_typeProperties_server')]",
+					"database": "[parameters('VieFundProd_properties_typeProperties_database')]",
+					"encrypt": "optional",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('VieFundProd_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('VieFundProd_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/WinfundProd')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"server": "[parameters('WinfundProd_properties_typeProperties_server')]",
+					"database": "[parameters('WinfundProd_properties_typeProperties_database')]",
+					"encrypt": "optional",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('WinfundProd_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('WinfundProd_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "ProdIR",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/ProdIR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ProdIR')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/StagingIR')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		}
+	]
+}
