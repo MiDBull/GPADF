@@ -78,10 +78,10 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "staging.usp_RunPlanPipeline"
+					"storedProcedureName": "[staging].[usp_RunPlanPipeline]"
 				},
 				"linkedServiceName": {
-					"referenceName": "DataMigrationProd",
+					"referenceName": "DataMigration",
 					"type": "LinkedServiceReference"
 				}
 			}
