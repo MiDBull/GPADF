@@ -1452,6 +1452,8 @@
 					{
 						"name": "RunPlanPipeline",
 						"type": "SqlServerStoredProcedure",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"retry": 0,
@@ -4573,7 +4575,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "DataMigrationProd",
+					"referenceName": "DataMigration",
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
@@ -4881,7 +4883,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/DataMigrationProd')]"
+				"[concat(variables('factoryId'), '/linkedServices/DataMigration')]"
 			]
 		},
 		{
