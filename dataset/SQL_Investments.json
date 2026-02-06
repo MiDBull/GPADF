@@ -2,7 +2,7 @@
 	"name": "SQL_Investments",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "DataMigrationProd",
+			"referenceName": "DataMigration",
 			"type": "LinkedServiceReference"
 		},
 		"folder": {

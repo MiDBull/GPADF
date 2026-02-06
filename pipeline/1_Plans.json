@@ -69,6 +69,8 @@
 			{
 				"name": "RunPlanPipeline",
 				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"retry": 0,
